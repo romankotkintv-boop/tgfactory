@@ -162,3 +162,40 @@ def test_seed_files_valid():
         for p in posts:
             assert visible_len(p["text"]) <= 1024 or name != "br_deals"
             assert set(re.findall(r"</?(\w+)", p["text"])) <= {"b", "i"}
+
+
+def test_llm_unavailable_keeps_item_and_stops(fac, monkeypatch):
+    """429/503 от модели: сырьё не сгорает, канал ждёт следующего запуска, модель больше не дёргаем."""
+    key, c = "uz_ielts", fac.cfg["uz_ielts"]
+    fac.collect(key, c)
+    before = fac.db.count_items(key, "evergreen", used=0)
+    calls = []
+    def down(*a, **k):
+        calls.append(1)
+        raise llm.LLMUnavailable("HTTP 429")
+    monkeypatch.setattr(fac.llm, "complete", down)
+    assert fac.generate(key, c) == 0
+    assert len(calls) == 1 and fac.llm_down
+    assert fac.db.count_items(key, "evergreen", used=0) == before
+    assert fac.generate("br_deals", fac.cfg["br_deals"]) == 0 and len(calls) == 1
+
+
+def test_gemini_fallback_to_next_model(monkeypatch):
+    seen = []
+    class R:
+        def __init__(self, code, body=None):
+            self.status_code, self._b, self.headers = code, body, {}
+        def raise_for_status(self): pass
+        def json(self): return self._b
+    def post(url, **k):
+        seen.append(url.split("/models/")[1].split(":")[0])
+        if "busy" in url:
+            return R(503)
+        return R(200, {"candidates": [{"content": {"parts": [{"text": '{"text": "ok"}'}]}}]})
+    monkeypatch.setattr(llm.httpx, "post", post)
+    m = llm.LLM("k", "busy-model, good-model", provider="gemini")
+    out = m._gemini("s", "u", 100, sleep=lambda s: None)
+    assert llm.parse_json(out)["text"] == "ok" and seen == ["busy-model", "busy-model", "good-model"]
+    m2 = llm.LLM("k", "busy-model", provider="gemini")
+    with pytest.raises(llm.LLMUnavailable):
+        m2._gemini("s", "u", 100, sleep=lambda s: None)
