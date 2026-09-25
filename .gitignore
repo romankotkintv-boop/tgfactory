@@ -1,0 +1,6 @@
+.env
+*.db
+outbox/
+media/
+.venv/
+__pycache__/
