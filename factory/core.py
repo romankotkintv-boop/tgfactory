@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -15,6 +16,7 @@ from .telegram import Bot
 log = logging.getLogger("core")
 SLOT_WINDOW_MIN = 90        # если сервер лежал дольше — пропущенный слот не догоняем
 MAX_GENERATE_PER_RUN = 3    # ограничение расходов на один запуск
+MAX_FAILS_PER_RUN = 2       # после стольких неудачных ответов канал ждёт следующего запуска
 
 
 def load_config(path="config/channels.yaml"):
@@ -29,6 +31,8 @@ class Factory:
         self.db = DB(self.env.get("DB_PATH", "factory.db"))
         self.dry = self.env.get("DRY_RUN", "1") == "1"
         self.admin = self.env.get("ADMIN_CHAT_ID")
+        self.llm_down = False   # модель перегружена — в этом запуске больше не дёргаем
+        self.pause = float(self.env.get("GEN_PAUSE_SEC", "5"))
         provider = self.env.get("LLM_PROVIDER", "gemini" if self.env.get("GEMINI_API_KEY") else "anthropic")
         if provider == "gemini":
             self.llm = llm_mod.LLM(self.env.get("GEMINI_API_KEY"), self.env.get("GEMINI_MODEL", ""),
@@ -113,17 +117,27 @@ class Factory:
         return text
 
     def generate(self, key, c):
-        made = 0
+        made = fails = 0
         system = open(c["prompt"], encoding="utf-8").read()
         while self.db.ready_count(key) < c.get("queue_target", 5) and made < MAX_GENERATE_PER_RUN:
+            if self.llm_down or fails >= MAX_FAILS_PER_RUN:
+                break
             kind, item = self._pick_item(key, c)
             if not item:
                 log.info("%s: нет сырья для генерации", key)
                 break
             self.db.mark_item_used(item["id"])
+            if not self.llm.mock and self.pause:
+                time.sleep(self.pause)   # бесплатный тариф: не больше ~12 запросов в минуту
             try:
                 data = llm_mod.parse_json(self.llm.complete(system, llm_mod.build_user_prompt(kind, item, c)))
+            except llm_mod.LLMUnavailable as e:
+                self.db.unmark_item(item["id"])   # сырьё вернём в очередь
+                self.llm_down = True
+                log.warning("%s: модель недоступна (%s) — продолжу в следующий запуск", key, e)
+                break
             except Exception as e:  # noqa: BLE001
+                fails += 1
                 log.warning("%s: генерация не удалась: %s", key, e)
                 continue
             text = self._finalize(kind, item, c, data["text"].strip())
@@ -198,7 +212,9 @@ class Factory:
 
     # ---------- Полный цикл (cron каждые 10 минут) ----------
     def run(self, collect_every_min=60):
-        for key, c in self.channels().items():
+        chans = list(self.channels().items())
+        random.shuffle(chans)   # чтобы при лимитах модели не голодал всегда последний канал
+        for key, c in chans:
             try:
                 last = self.db.get(f"{key}:last_collect")
                 if not last or datetime.now(timezone.utc) - datetime.fromisoformat(last) > timedelta(minutes=collect_every_min):

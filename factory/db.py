@@ -77,6 +77,10 @@ class DB:
         self.conn.execute("UPDATE items SET used=1 WHERE id=?", (item_id,))
         self.conn.commit()
 
+    def unmark_item(self, item_id):
+        self.conn.execute("UPDATE items SET used=0 WHERE id=?", (item_id,))
+        self.conn.commit()
+
     def count_items(self, channel, kind, used=None):
         q = "SELECT COUNT(*) FROM items WHERE channel=? AND kind=?"
         args = [channel, kind]

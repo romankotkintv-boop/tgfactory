@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import time
 
 import httpx
 
@@ -11,6 +12,18 @@ API_URL = "https://api.anthropic.com/v1/messages"
 
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+RETRY_STATUSES = {429, 500, 502, 503, 504, 529}
+
+
+class LLMUnavailable(Exception):
+    """Модель перегружена / исчерпан лимит. Сырьё не тратим, пробуем в следующий запуск."""
+
+
+def _wait_seconds(r, attempt):
+    try:
+        return min(float(r.headers.get("retry-after", "")), 30)
+    except ValueError:
+        return 8 * (attempt + 1)
 
 
 class LLM:
@@ -42,21 +55,31 @@ class LLM:
                   "system": system, "messages": [{"role": "user", "content": user}]},
             timeout=120,
         )
+        if r.status_code in RETRY_STATUSES:
+            raise LLMUnavailable(f"Claude API: HTTP {r.status_code}")
         r.raise_for_status()
         return "".join(b.get("text", "") for b in r.json()["content"])
 
-    def _gemini(self, system, user, max_tokens):
-        r = httpx.post(
-            GEMINI_URL.format(model=self.model),
-            params={"key": self.api_key},
-            json={"systemInstruction": {"parts": [{"text": system}]},
-                  "contents": [{"role": "user", "parts": [{"text": user}]}],
-                  "generationConfig": {"maxOutputTokens": max_tokens * 2,
-                                       "responseMimeType": "application/json"}},
-            timeout=120,
-        )
-        r.raise_for_status()
-        return gemini_text(r.json())
+    def _gemini(self, system, user, max_tokens, sleep=time.sleep):
+        """GEMINI_MODEL может быть списком через запятую: при перегрузке берём следующую модель."""
+        body = {"systemInstruction": {"parts": [{"text": system}]},
+                "contents": [{"role": "user", "parts": [{"text": user}]}],
+                "generationConfig": {"maxOutputTokens": max_tokens * 2,
+                                     "responseMimeType": "application/json"}}
+        last = None
+        for model in [m.strip() for m in self.model.split(",") if m.strip()]:
+            for attempt in range(2):
+                r = httpx.post(GEMINI_URL.format(model=model), params={"key": self.api_key},
+                               json=body, timeout=120)
+                if r.status_code in RETRY_STATUSES:
+                    last = f"{model}: HTTP {r.status_code}"
+                    log.warning("Gemini %s, жду и пробую ещё раз", last)
+                    if attempt == 0:
+                        sleep(_wait_seconds(r, attempt))
+                    continue
+                r.raise_for_status()
+                return gemini_text(r.json())
+        raise LLMUnavailable(last or "Gemini недоступна")
 
 
 def gemini_text(resp: dict) -> str:
