@@ -81,6 +81,18 @@ class DB:
         self.conn.execute("UPDATE items SET used=0 WHERE id=?", (item_id,))
         self.conn.commit()
 
+    def recover_orphan_items(self, channel=None):
+        """Возвращает в очередь сырьё, помеченное использованным, но по которому поста нет."""
+        q = ("UPDATE items SET used=0 WHERE used=1 AND id NOT IN "
+             "(SELECT item_id FROM posts WHERE item_id IS NOT NULL)")
+        args = []
+        if channel:
+            q += " AND channel=?"
+            args.append(channel)
+        n = self.conn.execute(q, args).rowcount
+        self.conn.commit()
+        return n
+
     def count_items(self, channel, kind, used=None):
         q = "SELECT COUNT(*) FROM items WHERE channel=? AND kind=?"
         args = [channel, kind]

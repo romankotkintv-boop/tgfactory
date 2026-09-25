@@ -14,7 +14,7 @@ def main(argv=None):
     logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"),
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     ap = argparse.ArgumentParser(prog="factory")
-    ap.add_argument("cmd", choices=["run", "collect", "generate", "status", "publish-now", "import-seed"])
+    ap.add_argument("cmd", choices=["run", "collect", "generate", "status", "publish-now", "import-seed", "recover-items"])
     ap.add_argument("channel", nargs="?")
     a = ap.parse_args(argv)
     f = Factory()
@@ -23,6 +23,8 @@ def main(argv=None):
         chans = {a.channel: chans[a.channel]}
     if a.cmd == "import-seed":
         print("загружено стартовых постов:", f.import_seed())
+    elif a.cmd == "recover-items":  # после сбоев модели: вернуть сырьё без постов в очередь
+        print("возвращено в очередь:", f.db.recover_orphan_items(a.channel))
     elif a.cmd == "run":
         f.run()
     elif a.cmd == "collect":
