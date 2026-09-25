@@ -1,0 +1,88 @@
+# Конфиг каналов. Один код — три канала. Меняется без правки кода.
+# Токены и ключи НЕ здесь, а в .env (см. .env.example).
+
+channels:
+
+  ru_marketing:
+    enabled: true
+    title: "Маркетинг для малого бизнеса"
+    language: ru
+    timezone: Europe/Moscow
+    bot_token_env: TG_BOT_RU            # имя переменной в .env
+    channel_id_env: TG_CHANNEL_RU       # @username или -100...
+    approval: false                     # публикуем без ручного одобрения
+    slots: ["09:10", "12:40", "16:20", "19:30"]   # время публикаций (часовой пояс канала)
+    queue_target: 6                     # сколько готовых постов держать в очереди
+    prompt: prompts/ru_marketing.md
+    image: { provider: openai, style: "flat editorial illustration, no text" }
+    mix:                                # доля типов постов
+      rss_digest: 0.5
+      evergreen: 0.5
+    rss:
+      - https://www.sostav.ru/rss
+      - https://www.cossa.ru/rss/
+      - https://rb.ru/feeds/all/
+      - https://vc.ru/rss/all
+    keywords: [маркетинг, реклам, продаж, клиент, бренд, маркетплейс, smm, telegram, контент, лид, воронк, crm, малый бизнес, предпринимател]
+    evergreen_topics:
+      - чек-лист запуска рекламы для малого бизнеса
+      - как посчитать стоимость клиента (CAC) на пальцах
+      - 5 ошибок в карточке товара на маркетплейсе
+      - как написать оффер, который читают
+      - разбор воронки продаж для локального бизнеса
+      - как работать с отзывами
+      - контент-план на неделю для малого бизнеса
+      - как выбрать канал для посева в Telegram
+
+  uz_ielts:
+    enabled: true
+    title: "IELTS va ingliz tili har kuni"
+    language: uz
+    timezone: Asia/Tashkent
+    bot_token_env: TG_BOT_UZ
+    channel_id_env: TG_CHANNEL_UZ
+    approval: true                      # первые недели — одобрение кнопкой (качество узбекского)
+    approval_timeout_min: 240           # без ответа — пост не выходит
+    slots: ["08:30", "13:00", "19:00"]
+    queue_target: 6
+    prompt: prompts/uz_ielts.md
+    image: { provider: none }
+    mix:
+      evergreen: 1.0
+    evergreen_topics:
+      - "Kun so'zi: 5 ta IELTS akademik so'z, misollar bilan"
+      - "Speaking Part 1: savol va namunaviy javob (Band 7)"
+      - "Writing Task 2: kirish qismi uchun shablon"
+      - "Grammatika: Present Perfect vs Past Simple"
+      - "Listening: eng ko'p uchraydigan xatolar"
+      - "Reading: True/False/Not Given strategiyasi"
+      - "Collocations: 'make' va 'do' bilan"
+      - "Mini test: 5 ta savol, javoblar pastda"
+      - "Writing Task 1: grafikni tasvirlash iboralari"
+      - "Speaking Part 2: cue card namunasi"
+
+  br_deals:
+    enabled: true
+    title: "Achados da Casa"
+    language: pt
+    timezone: America/Sao_Paulo
+    bot_token_env: TG_BOT_BR
+    channel_id_env: TG_CHANNEL_BR
+    approval: false
+    slots: ["09:00", "13:00", "19:00"]     # до ключей Shopee — 3 поста в день из стартовых; потом до 7
+    queue_target: 10
+    prompt: prompts/br_deals.md
+    image: { provider: source }         # берём фото товара из Shopee
+    disclosure: "#publi"                # метка рекламы по гиду CONAR — в каждом посте с партнёрской ссылкой
+    mix:
+      shopee_offers: 1.0
+    shopee:
+      keywords: [organizador, cozinha, limpeza, banheiro, utensilios, decoracao, cama mesa banho, lavanderia]
+      min_discount_pct: 20              # минимальная скидка по данным Shopee
+      min_rating: 4.5
+      min_sales: 50
+      max_price_brl: 300
+      # защита от фейковых скидок: цена не выше медианы за N дней × (1 - min_real_drop)
+      history_days: 30
+      min_real_drop: 0.10
+      require_history: false            # первые 30 дней истории нет — не блокируем
