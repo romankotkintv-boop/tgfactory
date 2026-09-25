@@ -1,0 +1,71 @@
+# Бесплатный запуск завода на GitHub Actions (приватный репозиторий: 2000 мин/мес на тарифе Free).
+# Цикл каждые 30 минут. Состояние (factory.db) коммитится обратно в репозиторий.
+name: tgfactory
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"          # GitHub может запускать с задержкой — слоты имеют окно 90 минут
+  workflow_dispatch:
+    inputs:
+      publish_now:
+        description: "Опубликовать следующий пост сейчас (all / ru_marketing / uz_ielts / br_deals / пусто)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tgfactory
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DRY_RUN: ${{ vars.DRY_RUN || '1' }}
+      DB_PATH: factory.db
+      LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'gemini' }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ADMIN_CHAT_ID: ${{ secrets.ADMIN_CHAT_ID }}
+      TG_BOT_RU: ${{ secrets.TG_BOT_RU }}
+      TG_CHANNEL_RU: ${{ secrets.TG_CHANNEL_RU }}
+      TG_BOT_UZ: ${{ secrets.TG_BOT_UZ }}
+      TG_CHANNEL_UZ: ${{ secrets.TG_CHANNEL_UZ }}
+      TG_BOT_BR: ${{ secrets.TG_BOT_BR }}
+      TG_CHANNEL_BR: ${{ secrets.TG_CHANNEL_BR }}
+      SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
+      SHOPEE_SECRET: ${{ secrets.SHOPEE_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -q -r requirements.txt
+      - name: Стартовые посты (однократно)
+        run: python -m factory import-seed
+      - name: Цикл завода
+        run: python -m factory run
+      - name: Публикация вне расписания
+        if: ${{ github.event.inputs.publish_now != '' }}
+        run: |
+          if [ "${{ github.event.inputs.publish_now }}" = "all" ]; then
+            python -m factory publish-now
+          else
+            python -m factory publish-now "${{ github.event.inputs.publish_now }}"
+          fi
+      - name: Статус
+        run: python -m factory status
+      - name: Сохранить состояние
+        run: |
+          git config user.name "tgfactory-bot"
+          git config user.email "tgfactory-bot@users.noreply.github.com"
+          git add -f factory.db
+          git diff --cached --quiet || git commit -m "state [skip ci]"
+          git push
