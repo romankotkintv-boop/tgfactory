@@ -11,6 +11,10 @@ on:
         description: "Опубликовать следующий пост сейчас (all / ru_marketing / uz_ielts / br_deals / пусто)"
         required: false
         default: ""
+      recover_items:
+        description: "yes = вернуть в очередь сырьё, сгоревшее из-за сбоев модели"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -48,6 +52,9 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -q -r requirements.txt
+      - name: Вернуть сырьё в очередь
+        if: ${{ github.event.inputs.recover_items == 'yes' }}
+        run: python -m factory recover-items
       - name: Стартовые посты (однократно)
         run: python -m factory import-seed
       - name: Цикл завода
