@@ -33,11 +33,11 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ADMIN_CHAT_ID: ${{ secrets.ADMIN_CHAT_ID }}
-      TG_BOT_RU: ${{ secrets.TG_BOT_RU }}
+      TG_BOT_RU: ${{ secrets.TG_BOT_RU || secrets.MBARU_POSTER_BOT }}
       TG_CHANNEL_RU: ${{ secrets.TG_CHANNEL_RU }}
-      TG_BOT_UZ: ${{ secrets.TG_BOT_UZ }}
+      TG_BOT_UZ: ${{ secrets.TG_BOT_UZ || secrets.MBAUZ_POSTER_BOT }}
       TG_CHANNEL_UZ: ${{ secrets.TG_CHANNEL_UZ }}
-      TG_BOT_BR: ${{ secrets.TG_BOT_BR }}
+      TG_BOT_BR: ${{ secrets.TG_BOT_BR || secrets.MBABR_POSTER_BOT }}
       TG_CHANNEL_BR: ${{ secrets.TG_CHANNEL_BR }}
       SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
       SHOPEE_SECRET: ${{ secrets.SHOPEE_SECRET }}
