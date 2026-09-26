@@ -10,6 +10,7 @@ channels:
     timezone: Europe/Moscow
     bot_token_env: TG_BOT_RU            # имя переменной в .env
     channel_id_env: TG_CHANNEL_RU       # @username или -100...
+    already_published: ["Взлом Bitget"]      # вышел 26.09, память робота потерялась — не повторять
     approval: false                     # публикуем без ручного одобрения
     slots: ["09:10", "12:40", "16:20", "19:30"]   # время публикаций (часовой пояс канала)
     queue_target: 6                     # сколько готовых постов держать в очереди
@@ -68,6 +69,7 @@ channels:
     timezone: America/Sao_Paulo
     bot_token_env: TG_BOT_BR
     channel_id_env: TG_CHANNEL_BR
+    already_published: ["Gaveta bagunçada nunca mais"]   # вышел 26.09 — не повторять
     approval: false
     slots: ["09:00", "13:00", "19:00"]     # до ключей Shopee — 3 поста в день из стартовых; потом до 7
     queue_target: 10
