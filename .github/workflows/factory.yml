@@ -47,6 +47,8 @@ jobs:
       SHOPEE_SECRET: ${{ secrets.SHOPEE_SECRET }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main                     # всегда свежий main с последним factory.db (а не коммит момента запуска)
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -75,4 +77,9 @@ jobs:
           git config user.email "tgfactory-bot@users.noreply.github.com"
           git add -f factory.db
           git diff --cached --quiet || git commit -m "state [skip ci]"
-          git push
+          for i in 1 2 3; do
+            git push && exit 0
+            # кто-то (загрузка файлов через сайт) успел закоммитить — подтягиваем, наша база главнее
+            git pull --rebase -X theirs origin main || { git checkout --theirs factory.db; git add factory.db; GIT_EDITOR=true git rebase --continue; }
+          done
+          exit 1
