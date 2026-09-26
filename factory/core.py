@@ -16,7 +16,7 @@ from .db import DB
 from .telegram import Bot
 
 log = logging.getLogger("core")
-SLOT_WINDOW_MIN = 90        # если сервер лежал дольше — пропущенный слот не догоняем
+SLOT_WINDOW_MIN = 150       # если сервер лежал дольше — пропущенный слот не догоняем
 MAX_GENERATE_PER_RUN = 3    # ограничение расходов на один запуск
 MAX_FAILS_PER_RUN = 2       # после стольких неудачных ответов канал ждёт следующего запуска
 
