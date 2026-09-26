@@ -63,3 +63,30 @@ def generate_gemini(prompt: str, api_key: str, out_dir: str, model: str = "gemin
     with open(path, "wb") as f:
         f.write(base64.b64decode(img["data"]))
     return path, None
+
+
+def add_watermark(path: str, text: str) -> str:
+    """Водяной знак: адрес канала в правом нижнем углу, полупрозрачная плашка. Ошибка — картинка без знака."""
+    if not path or not text:
+        return path
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        img = Image.open(path).convert("RGBA")
+        w, h = img.size
+        size = max(18, int(min(w, h) * 0.035))
+        font = ImageFont.load_default(size=size)
+        layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(layer)
+        x0, y0, x1, y1 = d.textbbox((0, 0), text, font=font)
+        tw, th = x1 - x0, y1 - y0
+        pad, margin = int(size * 0.5), int(size * 0.8)
+        bx1, by1 = w - margin, h - margin
+        bx0, by0 = bx1 - tw - 2 * pad, by1 - th - 2 * pad
+        d.rounded_rectangle((bx0, by0, bx1, by1), radius=pad, fill=(0, 0, 0, 110))
+        d.text((bx0 + pad - x0, by0 + pad - y0), text, font=font, fill=(255, 255, 255, 235))
+        out = os.path.splitext(path)[0] + "_wm.png"
+        Image.alpha_composite(img, layer).convert("RGB").save(out, "PNG")
+        return out
+    except Exception as e:  # noqa: BLE001
+        log.warning("водяной знак не поставлен: %s", e)
+        return path

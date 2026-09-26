@@ -231,6 +231,9 @@ class Factory:
         path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media",
                                            self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image",
                                            img.get("aspect", "4:3"))
+        if path:
+            mark = img.get("watermark") or self.env.get(c["channel_id_env"], "")
+            path = images.add_watermark(path, mark if str(mark).startswith("@") else "")
         if err:
             log.warning("%s: картинка не создана: %s", key, err)
             flag = f"img_fail:{datetime.now(timezone.utc).date().isoformat()}"
