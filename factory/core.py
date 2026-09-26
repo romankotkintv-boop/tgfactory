@@ -123,8 +123,8 @@ class Factory:
 
     def _finalize(self, kind, item, c, text):
         payload = json.loads(item["payload"] or "{}")
-        if kind in ("rss_digest", "trending") and item["url"] and "trends.google" not in item["url"] \
-                and item["url"] not in text:
+        if kind in ("rss_digest", "trending") and c.get("source_link", True) and item["url"] \
+                and "trends.google" not in item["url"] and item["url"] not in text:
             text += f'\n\n<a href="{item["url"]}">Источник</a>'
         if kind == "shopee_offers":
             link = payload.get("offerLink") or item["url"]
@@ -233,17 +233,43 @@ class Factory:
                     "No other text, no Uzbek, no Russian, no numbers")
         else:
             rule = "do not put any text, letters or numbers into the image"
-        ref = img.get("mascot_ref") if img.get("mascot_ref") and os.path.exists(img["mascot_ref"]) else None
+        # Реалистичное фото — когда подходит: новости/хайп всегда, уроки и советы иногда (photo_share)
+        kind = None
+        if p["item_id"]:
+            row = self.db.conn.execute("SELECT kind FROM items WHERE id=?", (p["item_id"],)).fetchone()
+            kind = row["kind"] if row else None
+        photo = bool(img.get("photo_style")) and (kind in ("trending", "rss_digest")
+                                                   or random.random() < float(img.get("photo_share", 0)))
+        style = img["photo_style"] if photo else img.get("style", "")
+        ref = None if photo else (img.get("mascot_ref") if img.get("mascot_ref") and os.path.exists(img["mascot_ref"]) else None)
         mascot = f"\n\n{img['mascot']}" if ref and img.get("mascot") else ""
-        prompt = (f"{img.get('style', '')}{mascot}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
+        aspect = img.get("aspect", "4:3")
+        frame = (f"\n\nCOMPOSITION: one single full-bleed {aspect} horizontal illustration that fills the ENTIRE frame "
+                 "edge to edge. No borders, no frames, no letterboxing, no blurred or stretched background at the sides, "
+                 "never a vertical poster or card placed inside a wider canvas, no collage, no multiple panels."
+                 "\nMOOD: positive and pleasant. Nothing unpleasant or creepy: no red, pink or magenta liquids or drops, "
+                 "nothing that could look like blood, no dripping onto characters, no injuries, no broken or dirty things "
+                 "on the character; the mascot (if present) is always shown in a good, dignified, happy situation.")
+        prompt = (f"{style}{mascot}{frame}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
         model = self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
         path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media", model,
-                                           img.get("aspect", "4:3"), ref_path=ref)
+                                           aspect, ref_path=ref)
         if err and ref:   # с образцом не вышло — рисуем без маскота, пост не должен остаться без картинки
             log.warning("%s: картинка с маскотом не вышла (%s), пробую без него", key, err)
-            prompt = (f"{img.get('style', '')}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
-            path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media", model,
-                                               img.get("aspect", "4:3"))
+            prompt = (f"{style}{frame}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
+            ref = None
+            path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media", model, aspect)
+        for _ in range(2):   # «постер с полосами по бокам» — перерисовываем (до 2 раз)
+            if not (path and images.letterbox_bounds(path)):
+                break
+            log.warning("%s: картинка с боковыми полосами, перерисовываю", key)
+            path2, _e = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media", model,
+                                               aspect, ref_path=ref)
+            if path2:
+                path = path2
+        b = images.letterbox_bounds(path) if path else None
+        if b:   # так и не вышло — срезаем пустые бока, чтобы не было полос
+            images.crop_to(path, *b)
         if path:
             mark = img.get("watermark") or self.env.get(c["channel_id_env"], "")
             path = images.add_watermark(path, mark if str(mark).startswith("@") else "")
@@ -336,6 +362,12 @@ class Factory:
         Совпадение по куску текста — такие посты помечаем опубликованными, чтобы не было дублей."""
         n = 0
         for key, c in self.channels().items():
+            if not c.get("source_link", True):   # ссылки на источник в этом канале не нужны — убираем из очереди
+                for st in ("queued", "approved", "pending_approval"):
+                    for p in self.db.posts(key, st):
+                        t = re.sub(r'\n*<a href="[^"]*">Источник</a>\s*$', "", p["text"])
+                        if t != p["text"]:
+                            self.db.set_post(p["id"], text=t)
             for frag in c.get("already_published", []):
                 for st in ("queued", "approved", "pending_approval"):
                     for p in self.db.posts(key, st):

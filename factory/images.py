@@ -97,3 +97,37 @@ def add_watermark(path: str, text: str) -> str:
     except Exception as e:  # noqa: BLE001
         log.warning("водяной знак не поставлен: %s", e)
         return path
+
+
+def letterbox_bounds(path: str):
+    """Модель иногда рисует вертикальный постер по центру и заливает бока (размытием или однотонно).
+    Ищем такие полосы: резкий вертикальный шов слева и справа + почти пустые края.
+    Возвращает (x_left, x_right) границ полезной картинки или None."""
+    try:
+        import numpy as np
+        from PIL import Image
+        a = np.asarray(Image.open(path).convert("L"), dtype=float)
+    except Exception:  # noqa: BLE001
+        return None
+    h, w = a.shape
+    e = np.abs(np.diff(a, axis=1))
+    gx = e.mean(axis=0)
+    med = float(np.median(gx)) + 1e-6
+    lo, hi = int(w * .12), int(w * .42)
+    lo2, hi2 = int(w * .58), int(w * .88)
+    xl = lo + int(gx[lo:hi].argmax())
+    xr = lo2 + int(gx[lo2:hi2].argmax())
+    seam = min(gx[xl], gx[xr]) / med
+    side = (e[:, :int(w * .2)].mean() + e[:, int(w * .8):].mean()) / 2
+    ctr = e[:, int(w * .3):int(w * .7)].mean() + 1e-6
+    symmetric = abs(xl - (w - xr)) < w * .05   # постер ровно по центру
+    if seam > 10 and side / ctr < 0.5 and symmetric:
+        return xl + 2, xr - 1
+    return None
+
+
+def crop_to(path: str, x_left: int, x_right: int) -> str:
+    from PIL import Image
+    im = Image.open(path)
+    im.crop((x_left, 0, x_right, im.size[1])).save(path)
+    return path
