@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -178,7 +179,29 @@ class Factory:
             if datetime.now(timezone.utc) - datetime.fromisoformat(p["created_at"]) > timeout:
                 self.db.set_post(p["id"], status="rejected", error="нет ответа — истёк срок одобрения")
 
-    # ---------- 4. Публикация ----------
+    # ---------- 4. Картинка к посту (в момент публикации: платим только за вышедшие посты) ----------
+    def ensure_image(self, key, c, p):
+        """Возвращает (image_path, image_url). Нет картинки — публикуем текстом, админу одно уведомление в день."""
+        if p["image_path"] or p["image_url"]:
+            return p["image_path"], p["image_url"]
+        img = c.get("image", {})
+        if "gemini" not in (img.get("provider"), img.get("fallback")) or self.dry:
+            return None, None   # в тестовом режиме не тратим деньги на картинки
+        plain = re.sub(r"<[^>]+>", "", p["text"])[:700]
+        prompt = (f"{img.get('style', '')}\n\nThe image illustrates this Telegram post "
+                  f"(do not copy the post text into the image):\n{plain}")
+        path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media",
+                                           self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image",
+                                           img.get("aspect", "4:3"))
+        if err:
+            log.warning("%s: картинка не создана: %s", key, err)
+            flag = f"img_fail:{datetime.now(timezone.utc).date().isoformat()}"
+            if not self.db.get(flag):
+                self.db.put(flag, 1)
+                self.bot(c).notify(self.admin, f"⚠️ Картинки не создаются (пост ушёл без картинки): {err[:300]}")
+        return path, None
+
+    # ---------- 5. Публикация ----------
     def due_slot(self, c, now_utc=None):
         tz = ZoneInfo(c.get("timezone", "UTC"))
         now = (now_utc or datetime.now(timezone.utc)).astimezone(tz)
@@ -201,7 +224,8 @@ class Factory:
             return None
         p = ready[0]
         try:
-            msg = self.bot(c).send_post(self.chat(c), p["text"], p["image_path"], p["image_url"])
+            image_path, image_url = self.ensure_image(key, c, p)
+            msg = self.bot(c).send_post(self.chat(c), p["text"], image_path, image_url)
             self.db.set_post(p["id"], status="published", published_at=datetime.now(timezone.utc).isoformat(),
                              tg_message_id=msg.get("message_id"))
             return p["id"]

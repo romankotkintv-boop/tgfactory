@@ -43,7 +43,8 @@ def main(argv=None):
                 print(k, "нет готовых постов")
                 continue
             p = ready[0]
-            msg = f.bot(c).send_post(f.chat(c), p["text"], p["image_path"], p["image_url"])
+            image_path, image_url = f.ensure_image(k, c, p)
+            msg = f.bot(c).send_post(f.chat(c), p["text"], image_path, image_url)
             f.db.set_post(p["id"], status="published", tg_message_id=msg.get("message_id"))
             print(k, "опубликован пост", p["id"])
     elif a.cmd == "status":

@@ -59,6 +59,13 @@ class Bot:
             return self._call("sendPhoto", {**base, "caption": text, "photo": image_url})
         if visible_len(text) > TEXT_LIMIT:
             raise ValueError("текст длиннее 4096 символов")
+        if image_path or image_url:   # текст длиннее подписи: сначала картинка, следом текст
+            photo = {"chat_id": chat_id}
+            if image_path:
+                with open(image_path, "rb") as f:
+                    self._call("sendPhoto", photo, files={"photo": f})
+            else:
+                self._call("sendPhoto", {**photo, "photo": image_url})
         return self._call("sendMessage", {**base, "text": text})
 
     # --- одобрение ---

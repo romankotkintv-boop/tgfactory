@@ -1,4 +1,4 @@
-"""Картинки: none | source (фото товара из источника) | openai (генерация)."""
+"""Картинки: none | source (фото товара из источника) | gemini (Nano Banana, платно ~$0,03/шт) | openai."""
 import base64
 import logging
 import os
@@ -30,3 +30,36 @@ def generate_openai(prompt: str, api_key: str, out_dir: str, model: str = "gpt-i
     with open(path, "wb") as f:
         f.write(base64.b64decode(b64))
     return path
+
+
+GEMINI_IMAGE_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+
+def generate_gemini(prompt: str, api_key: str, out_dir: str, model: str = "gemini-3.1-flash-lite-image",
+                    aspect: str = "4:3") -> tuple[str | None, str | None]:
+    """Возвращает (путь к картинке, None) или (None, текст ошибки). Ошибка не ломает публикацию."""
+    if not api_key or not prompt:
+        return None, "нет ключа или промпта"
+    try:
+        r = httpx.post(
+            GEMINI_IMAGE_URL.format(model=model), params={"key": api_key},
+            json={"contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                  "generationConfig": {"responseModalities": ["IMAGE"],
+                                       "imageConfig": {"aspectRatio": aspect}}},
+            timeout=180,
+        )
+        if r.status_code != 200:
+            return None, f"HTTP {r.status_code}: {r.text[:300]}"
+        parts = (r.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+        img = next((p.get("inlineData") or p.get("inline_data") for p in parts
+                    if p.get("inlineData") or p.get("inline_data")), None)
+        if not img:
+            return None, f"в ответе нет картинки: {str(r.json())[:300]}"
+    except Exception as e:  # noqa: BLE001
+        return None, str(e)[:300]
+    ext = ".png" if "png" in img.get("mimeType", img.get("mime_type", "png")) else ".jpg"
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f"{uuid.uuid4().hex}{ext}")
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(img["data"]))
+    return path, None
