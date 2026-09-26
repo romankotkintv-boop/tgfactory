@@ -255,7 +255,10 @@ class Factory:
                  "never a vertical poster or card placed inside a wider canvas, no collage, no multiple panels."
                  "\nMOOD: positive and pleasant. Nothing unpleasant or creepy: no red, pink or magenta liquids or drops, "
                  "nothing that could look like blood, no dripping onto characters, no injuries, no broken or dirty things "
-                 "on the character; the mascot (if present) is always shown in a good, dignified, happy situation.")
+                 "on the character; the mascot (if present) is always shown in a good, dignified, happy situation."
+                 "\nNEVER BORING: one bold, unexpected, witty idea; strong emotion or action; dramatic lighting; rich color "
+                 "contrast; interesting camera angle (low angle, close-up, motion). No cliches: lightbulbs, rockets, gears, "
+                 "targets, puzzle pieces, arrows, charts, handshakes, people sitting at laptops.")
         prompt = (f"{style}{mascot}{frame}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
         model = self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
         path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media", model,
@@ -276,6 +279,20 @@ class Factory:
         b = images.letterbox_bounds(path) if path else None
         if b:   # так и не вышло — срезаем пустые бока, чтобы не было полос
             images.crop_to(path, *b)
+        # Арт-директор: если картинка скучная (оценка < 7) — одна перерисовка с его подсказкой, берём лучшую
+        critic = (self.env.get("GEMINI_MODEL") or "").split(",")[0].strip()
+        min_score = int(img.get("min_score", 7))
+        if path and critic and min_score:
+            score, fix = images.rate_image(path, plain, self.env.get("GEMINI_API_KEY"), critic)
+            log.info("%s: оценка картинки %s (%s)", key, score, fix)
+            if score is not None and score < min_score:
+                p2, _e = images.generate_gemini(f"{prompt}\n\nART DIRECTOR FEEDBACK (must fix): {fix}",
+                                                self.env.get("GEMINI_API_KEY"), "media", model, aspect, ref_path=ref)
+                if p2 and not images.letterbox_bounds(p2):
+                    s2, _f = images.rate_image(p2, plain, self.env.get("GEMINI_API_KEY"), critic)
+                    log.info("%s: оценка перерисовки %s", key, s2)
+                    if s2 is None or s2 >= score:
+                        path = p2
         if path:
             mark = img.get("watermark") or self.env.get(c["channel_id_env"], "")
             path = images.add_watermark(path, mark if str(mark).startswith("@") else "")

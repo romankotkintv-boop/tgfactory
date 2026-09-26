@@ -131,3 +131,39 @@ def crop_to(path: str, x_left: int, x_right: int) -> str:
     im = Image.open(path)
     im.crop((x_left, 0, x_right, im.size[1])).save(path)
     return path
+
+
+CRITIC_PROMPT = """You are a strict art director of a popular Telegram channel. Rate this post image for how
+eye-catching and NON-boring it is in a fast-scrolling feed (1 = dull stock/cliche, 10 = stops the scroll).
+Penalize: generic stock scenes (people at laptops/desks, charts, handshakes, meetings), cliche icons (lightbulbs,
+rockets, gears, targets, puzzle pieces, arrows), empty or flat composition, muddy colors, blurred/letterboxed sides,
+anything unpleasant or creepy, garbled text. Reward: one bold unexpected idea, strong emotion or action, dramatic
+light, rich contrast, clear link to the post topic.
+Post (for context): {post}
+Answer strictly JSON: {{"score": <1-10>, "fix": "<one short instruction how to make it more striking>"}}"""
+
+
+def rate_image(path: str, post: str, api_key: str, model: str) -> tuple[int | None, str]:
+    """Оценка «цепляет / скучно» мультимодальной моделью. Ошибка — (None, '') и картинку не трогаем."""
+    import json as _json
+    import re as _re
+    if not (api_key and model and path and os.path.exists(path)):
+        return None, ""
+    try:
+        with open(path, "rb") as f:
+            data = base64.b64encode(f.read()).decode()
+        mime = "image/png" if path.lower().endswith(".png") else "image/jpeg"
+        r = httpx.post(GEMINI_IMAGE_URL.format(model=model), params={"key": api_key}, timeout=90,
+                       json={"contents": [{"role": "user", "parts": [
+                           {"inlineData": {"mimeType": mime, "data": data}},
+                           {"text": CRITIC_PROMPT.format(post=post[:600])}]}],
+                             "generationConfig": {"responseMimeType": "application/json", "maxOutputTokens": 2048}})
+        if r.status_code != 200:
+            return None, ""
+        parts = (r.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+        raw = "".join(p.get("text", "") for p in parts)
+        m = _re.search(r"\{.*\}", raw, _re.S)
+        d = _json.loads(m.group(0)) if m else {}
+        return int(d.get("score")), str(d.get("fix", ""))[:300]
+    except Exception:  # noqa: BLE001
+        return None, ""
