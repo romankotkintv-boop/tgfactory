@@ -15,6 +15,10 @@ on:
         description: "yes = вернуть в очередь сырьё, сгоревшее из-за сбоев модели"
         required: false
         default: ""
+      make_logos:
+        description: "yes = нарисовать варианты логотипов каналов (папка logos/)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -57,6 +61,9 @@ jobs:
       - name: Вернуть сырьё в очередь
         if: ${{ github.event.inputs.recover_items == 'yes' }}
         run: python -m factory recover-items
+      - name: Логотипы каналов
+        if: ${{ github.event.inputs.make_logos == 'yes' }}
+        run: python -m factory logos
       - name: Стартовые посты (однократно)
         run: python -m factory import-seed
       - name: Цикл завода
@@ -78,6 +85,7 @@ jobs:
           git config user.name "tgfactory-bot"
           git config user.email "tgfactory-bot@users.noreply.github.com"
           git add -f factory.db
+          [ -d logos ] && git add -f logos || true
           git diff --cached --quiet || git commit -m "state [skip ci]"
           for i in 1 2 3; do
             git push && exit 0
