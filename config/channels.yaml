@@ -17,6 +17,13 @@ channels:
       - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: marketing for small business. Icon: a small shop storefront with a rising rocket above it. Colors: bright orange background, deep navy icon, white accents."
       - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: smart DIY marketing. Icon: a target with an arrow in the bullseye shaped like a lightbulb. Colors: deep navy background, orange and white icon."
     slots: ["09:10", "12:40", "16:20", "19:30"]   # время публикаций (часовой пояс канала)
+    quiz:                               # регулярный интерактив: Telegram-викторина
+      slots: ["14:30"]
+      brief: >-
+        Канал «Маркетинг без агентства» для владельцев малого бизнеса и селлеров Wildberries/Ozon.
+        Викторина на русском: практичный вопрос по маркетингу, рекламе, продажам, карточкам товара,
+        аналитике, ИИ-инструментам для бизнеса. Уровень — предприниматель, не маркетолог.
+        Варианты правдоподобные, чтобы было интересно подумать. Объяснение — вывод, который можно применить сегодня.
     queue_target: 6                     # сколько готовых постов держать в очереди
     prompt: prompts/ru_marketing.md
     image:
@@ -81,6 +88,13 @@ channels:
     approval: false                     # по решению владельца: публикуем без ручного одобрения (как RU и BR)
     approval_timeout_min: 240           # без ответа — пост не выходит
     slots: ["08:30", "13:00", "19:00"]
+    quiz:                               # регулярный интерактив: 2 викторины в день
+      slots: ["10:30", "17:00"]
+      brief: >-
+        Kanal «IELTS har kuni» — o'zbek yoshlari uchun IELTS tayyorgarlik. Savol va variantlar — INGLIZ tilida
+        (masalan: fill the gap, synonym, collocation, preposition, common mistake, IELTS band 7 vocabulary,
+        word meaning). Explanation — O'ZBEK tilida (lotin yozuvi), qisqa: nega shu javob to'g'ri.
+        Daraja B1–C1. Mavzular har xil bo'lsin: grammar, vocabulary, collocations, Speaking/Writing tips.
     queue_target: 6
     prompt: prompts/uz_ielts.md
     image:
