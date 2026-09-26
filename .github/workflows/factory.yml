@@ -15,6 +15,10 @@ on:
         description: "yes = вернуть в очередь сырьё, сгоревшее из-за сбоев модели"
         required: false
         default: ""
+      publish_count:
+        description: "Сколько постов на канал публиковать вне очереди (1–15)"
+        required: false
+        default: "1"
       make_logos:
         description: "yes = нарисовать варианты логотипов каналов (папка logos/)"
         required: false
@@ -30,7 +34,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       DRY_RUN: ${{ vars.DRY_RUN || '1' }}
       DB_PATH: factory.db
@@ -72,9 +76,9 @@ jobs:
         if: ${{ github.event.inputs.publish_now != '' }}
         run: |
           if [ "${{ github.event.inputs.publish_now }}" = "all" ]; then
-            python -m factory publish-now
+            python -m factory publish-now --count "${{ github.event.inputs.publish_count || 1 }}"
           else
-            python -m factory publish-now "${{ github.event.inputs.publish_now }}"
+            python -m factory publish-now "${{ github.event.inputs.publish_now }}" --count "${{ github.event.inputs.publish_count || 1 }}"
           fi
       - name: Статус
         if: always()
