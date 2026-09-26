@@ -19,6 +19,10 @@ on:
         description: "Сколько постов на канал публиковать вне очереди (1–15)"
         required: false
         default: "1"
+      quiz_now:
+        description: "Викторина сейчас (all / ru_marketing / uz_ielts)"
+        required: false
+        default: ""
       make_logos:
         description: "yes = нарисовать варианты логотипов каналов (папка logos/)"
         required: false
@@ -79,6 +83,14 @@ jobs:
             python -m factory publish-now --count "${{ github.event.inputs.publish_count || 1 }}"
           else
             python -m factory publish-now "${{ github.event.inputs.publish_now }}" --count "${{ github.event.inputs.publish_count || 1 }}"
+          fi
+      - name: Викторина вне расписания
+        if: ${{ github.event.inputs.quiz_now != '' }}
+        run: |
+          if [ "${{ github.event.inputs.quiz_now }}" = "all" ]; then
+            python -m factory quiz-now
+          else
+            python -m factory quiz-now "${{ github.event.inputs.quiz_now }}"
           fi
       - name: Статус
         if: always()
