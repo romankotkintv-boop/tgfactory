@@ -226,8 +226,13 @@ class Factory:
         if "gemini" not in (img.get("provider"), img.get("fallback")) or self.dry:
             return None, None   # в тестовом режиме не тратим деньги на картинки
         plain = re.sub(r"<[^>]+>", "", p["text"])[:700]
-        prompt = (f"{img.get('style', '')}\n\nThe image illustrates this Telegram post "
-                  f"(do not put any text, letters or numbers into the image):\n{plain}")
+        if img.get("text") == "english":   # латиница у модели выходит чисто — даём короткий английский заголовок
+            rule = ("Put exactly ONE short English headline (max 4 words: the key English word or phrase of the post) "
+                    "into the image in large bold clean sans-serif letters, spelled exactly correctly. "
+                    "No other text, no Uzbek, no Russian, no numbers")
+        else:
+            rule = "do not put any text, letters or numbers into the image"
+        prompt = (f"{img.get('style', '')}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
         path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media",
                                            self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image",
                                            img.get("aspect", "4:3"))
