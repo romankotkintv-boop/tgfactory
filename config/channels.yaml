@@ -21,8 +21,8 @@ channels:
       style: >-
         Clean modern flat editorial illustration or simple infographic for a Russian Telegram channel
         about marketing for small business. Deep navy blue and warm orange palette, white background,
-        minimal and professional. If any text appears it must be in Russian, at most 5 words, spelled correctly.
-        No logos, no brand names, no real people.
+        minimal and professional. Purely visual: absolutely no text, no letters, no words, no numbers,
+        no captions or labels anywhere in the image. No logos, no brand names, no real people.
     mix:                                # доля типов постов
       rss_digest: 0.5
       evergreen: 0.5
@@ -59,9 +59,8 @@ channels:
       aspect: "4:3"
       style: >-
         Minimal educational flashcard-style image for an IELTS English learning channel.
-        Calm teal and white palette, friendly and clean. Any text must be in English only:
-        show the key English word or phrase of the post large and legible, at most 6 words.
-        No logos, no real people.
+        Calm teal and white palette, friendly and clean. Purely visual metaphor for the topic:
+        absolutely no text, no letters, no words, no numbers anywhere in the image. No logos, no real people.
     mix:
       evergreen: 1.0
     evergreen_topics:
