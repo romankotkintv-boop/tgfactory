@@ -41,7 +41,7 @@ channels:
     timezone: Asia/Tashkent
     bot_token_env: TG_BOT_UZ
     channel_id_env: TG_CHANNEL_UZ
-    approval: true                      # первые недели — одобрение кнопкой (качество узбекского)
+    approval: false                     # по решению владельца: публикуем без ручного одобрения (как RU и BR)
     approval_timeout_min: 240           # без ответа — пост не выходит
     slots: ["08:30", "13:00", "19:00"]
     queue_target: 6
