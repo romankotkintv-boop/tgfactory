@@ -1,5 +1,6 @@
 """Telegram Bot API: публикация, одобрение кнопками, dry-run в папку outbox/."""
 import html
+import json
 import logging
 import os
 import re
@@ -67,6 +68,18 @@ class Bot:
             else:
                 self._call("sendPhoto", {**photo, "photo": image_url})
         return self._call("sendMessage", {**base, "text": text})
+
+    def send_quiz(self, chat_id, question, options, correct, explanation=""):
+        """Викторина: люди жмут вариант и сразу видят верный ответ и объяснение."""
+        if self.dry_run:
+            return self._dry(chat_id, f"QUIZ: {question}\n" + "\n".join(
+                ("✅ " if i == correct else "▫️ ") + o for i, o in enumerate(options)) + f"\n💡 {explanation}", tag="quiz")
+        data = {"chat_id": chat_id, "question": question, "type": "quiz", "is_anonymous": "true",
+                "options": json.dumps([{"text": o} for o in options], ensure_ascii=False),
+                "correct_option_id": correct}
+        if explanation:
+            data["explanation"] = explanation
+        return self._call("sendPoll", data)
 
     # --- одобрение ---
     def ask_approval(self, admin_chat, post_id, text, image_path=None, image_url=None):

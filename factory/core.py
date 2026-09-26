@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 import yaml
 
+from . import quiz as quiz_mod
 from . import images, llm as llm_mod, sources
 from .db import DB
 from .telegram import Bot
@@ -248,11 +249,11 @@ class Factory:
         return path, None
 
     # ---------- 5. Публикация ----------
-    def due_slot(self, c, now_utc=None):
+    def due_slot(self, c, now_utc=None, slots=None):
         tz = ZoneInfo(c.get("timezone", "UTC"))
         now = (now_utc or datetime.now(timezone.utc)).astimezone(tz)
         day = now.date().isoformat()
-        for s in c.get("slots", []):
+        for s in (c.get("slots", []) if slots is None else slots):
             hh, mm = map(int, s.split(":"))
             slot_t = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
             if slot_t <= now < slot_t + timedelta(minutes=SLOT_WINDOW_MIN):
@@ -278,6 +279,48 @@ class Factory:
         except Exception as e:  # noqa: BLE001
             self.db.set_post(p["id"], status="failed", error=str(e))
             self.bot(c).notify(self.admin, f"❌ {c['title']}: ошибка публикации поста {p['id']}: {e}")
+            return None
+
+    # ---------- 6. Викторины (регулярный интерактив) ----------
+    def publish_quiz(self, key, c, now_utc=None, force=False):
+        qcfg = c.get("quiz")
+        if not qcfg:
+            return None
+        if force:
+            day, slot = None, None
+        else:
+            day, slot = self.due_slot(c, now_utc, qcfg.get("slots", []))
+            if not slot or self.db.slot_used(key, day, "quiz " + slot):
+                return None
+        if self.llm_down:
+            return None
+        last_err = None
+        for _ in range(2):   # модель иногда нарушает лимиты — вторая попытка
+            try:
+                q = quiz_mod.make(self.llm, qcfg, quiz_mod.recent_topics(self.db, key))
+                break
+            except llm_mod.LLMUnavailable as e:
+                self.llm_down = True
+                log.warning("%s: викторина отложена, модель недоступна: %s", key, e)
+                return None   # слот не занимаем — попробуем в следующий запуск (окно 90 мин)
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+        else:
+            if slot:
+                self.db.use_slot(key, day, "quiz " + slot)
+            self.bot(c).notify(self.admin, f"⚠️ {c['title']}: викторина не собралась: {last_err}")
+            return None
+        if slot:
+            self.db.use_slot(key, day, "quiz " + slot)
+        try:
+            intro = qcfg.get("intro")
+            if intro and not self.dry:
+                self.bot(c).send_post(self.chat(c), intro)
+            msg = self.bot(c).send_quiz(self.chat(c), q["question"], q["options"], q["correct"], q["explanation"])
+            quiz_mod.remember(self.db, key, q)
+            return msg.get("message_id")
+        except Exception as e:  # noqa: BLE001
+            self.bot(c).notify(self.admin, f"❌ {c['title']}: ошибка публикации викторины: {e}")
             return None
 
     # ---------- Полный цикл (cron каждые 10 минут) ----------
@@ -309,6 +352,7 @@ class Factory:
                 self.approvals(key, c)
                 self.generate(key, c)
                 self.publish(key, c)
+                self.publish_quiz(key, c)
             except Exception as e:  # noqa: BLE001
                 log.exception("%s: сбой цикла", key)
                 self.bot(c).notify(self.admin, f"❌ {c.get('title', key)}: сбой цикла: {e}")

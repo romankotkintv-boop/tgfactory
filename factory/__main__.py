@@ -14,7 +14,7 @@ def main(argv=None):
     logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"),
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     ap = argparse.ArgumentParser(prog="factory")
-    ap.add_argument("cmd", choices=["run", "collect", "generate", "status", "publish-now", "import-seed", "recover-items", "logos"])
+    ap.add_argument("cmd", choices=["run", "collect", "generate", "status", "publish-now", "import-seed", "recover-items", "logos", "quiz-now"])
     ap.add_argument("channel", nargs="?")
     ap.add_argument("--count", type=int, default=1, help="publish-now: сколько постов на канал")
     a = ap.parse_args(argv)
@@ -78,6 +78,10 @@ def main(argv=None):
                     break
                 if n + 1 < a.count:
                     time.sleep(int(os.getenv("BURST_PAUSE_SEC", "20")))
+    elif a.cmd == "quiz-now":  # викторина вне расписания
+        for k, c in chans.items():
+            if c.get("enabled", True) and c.get("quiz"):
+                print(k, "викторина:", f.publish_quiz(k, c, force=True))
     elif a.cmd == "status":
         for k, counts in f.status():
             print(k, counts)
