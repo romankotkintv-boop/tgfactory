@@ -34,6 +34,7 @@ def main(argv=None):
         for k, c in chans.items():
             print(k, "создано постов:", f.generate(k, c))
     elif a.cmd == "publish-now":  # ручная проверка: публикует следующий готовый пост вне расписания
+        f.reconcile()
         for k, c in chans.items():
             f.approvals(k, c)  # сначала забираем нажатые кнопки ✅/❌
         for k, c in chans.items():

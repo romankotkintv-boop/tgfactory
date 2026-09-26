@@ -211,7 +211,21 @@ class Factory:
             return None
 
     # ---------- Полный цикл (cron каждые 10 минут) ----------
+    def reconcile(self):
+        """already_published в channels.yaml: посты, которые уже вышли, но память о них потерялась.
+        Совпадение по куску текста — такие посты помечаем опубликованными, чтобы не было дублей."""
+        n = 0
+        for key, c in self.channels().items():
+            for frag in c.get("already_published", []):
+                for st in ("queued", "approved", "pending_approval"):
+                    for p in self.db.posts(key, st):
+                        if frag in p["text"]:
+                            self.db.set_post(p["id"], status="published", error="уже был опубликован ранее")
+                            n += 1
+        return n
+
     def run(self, collect_every_min=60):
+        self.reconcile()
         chans = list(self.channels().items())
         random.shuffle(chans)   # чтобы при лимитах модели не голодал всегда последний канал
         for key, c in chans:
