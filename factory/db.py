@@ -102,6 +102,12 @@ class DB:
         return self.conn.execute(q, args).fetchone()[0]
 
     # --- posts ---
+    def hot_posts(self, channel):
+        """Готовые посты по горячим темам (kind=trending), свежие первыми."""
+        return self.conn.execute(
+            "SELECT p.* FROM posts p JOIN items i ON i.id = p.item_id WHERE p.channel=? AND i.kind='trending' "
+            "AND p.status IN ('queued','approved') ORDER BY p.id DESC", (channel,)).fetchall()
+
     def add_post(self, channel, item_id, text, status, image_url=None, image_path=None) -> int:
         cur = self.conn.execute(
             "INSERT INTO posts(channel,item_id,text,image_url,image_path,status,created_at) VALUES (?,?,?,?,?,?,?)",

@@ -98,12 +98,14 @@ class Factory:
         return n
 
     # ---------- 2. Генерация ----------
-    def _pick_item(self, key, c):
+    def _pick_item(self, key, c, only=None):
         mix = c.get("mix", {})
         kinds = list(mix)
         first = random.choices(kinds, weights=[mix[k] for k in kinds])[0]
         kinds.remove(first)
         kinds.insert(0, first)  # сначала тип по весам mix, остальные — запасные
+        if only:
+            kinds = [only] if only in mix else []
         max_age = c.get("trending", {}).get("max_age_hours", 36) * 3600
         for kind in kinds:
             while True:
@@ -131,10 +133,15 @@ class Factory:
     def generate(self, key, c):
         made = fails = 0
         system = open(c["prompt"], encoding="utf-8").read()
-        while self.db.ready_count(key) < c.get("queue_target", 5) and made < MAX_GENERATE_PER_RUN:
+        # Хайп не ждёт очереди: если готового поста по свежей горячей теме нет — делаем один сразу
+        want_hot = "trending" in c.get("mix", {}) and not self.hot_posts(key, c)
+        while (want_hot or self.db.ready_count(key) < c.get("queue_target", 5)) and made < MAX_GENERATE_PER_RUN:
             if self.llm_down or fails >= MAX_FAILS_PER_RUN:
                 break
-            kind, item = self._pick_item(key, c)
+            kind, item = self._pick_item(key, c, only="trending" if want_hot else None)
+            if want_hot and not item:
+                want_hot = False
+                continue
             if not item:
                 log.info("%s: нет сырья для генерации", key)
                 break
@@ -171,7 +178,27 @@ class Factory:
                 msg = self.bot(c).ask_approval(self.admin or "ADMIN", pid, text, image_path, image_url)
                 self.db.set_post(pid, approval_msg_id=msg.get("message_id"))
             made += 1
+            if kind == "trending":
+                want_hot = False
         return made
+
+    def hot_posts(self, key, c):
+        """Свежие посты по горячим темам; протухшие (старше max_age_hours) снимаем с публикации."""
+        max_age = timedelta(hours=c.get("trending", {}).get("max_age_hours", 36))
+        fresh = []
+        for p in self.db.hot_posts(key):
+            if datetime.now(timezone.utc) - datetime.fromisoformat(p["created_at"]) > max_age:
+                self.db.set_post(p["id"], status="rejected", error="горячая тема устарела")
+            else:
+                fresh.append(p)
+        return fresh
+
+    def ready_posts(self, key, c):
+        """Порядок публикации: свежий хайп → одобренные → очередь."""
+        hot = self.hot_posts(key, c)
+        ids = {p["id"] for p in hot}
+        rest = [p for p in self.db.posts(key, "approved") + self.db.posts(key, "queued") if p["id"] not in ids]
+        return hot + rest
 
     # ---------- 3. Одобрение ----------
     def approvals(self, key, c):
@@ -228,7 +255,7 @@ class Factory:
         day, slot = self.due_slot(c, now_utc)
         if not slot or self.db.slot_used(key, day, slot):
             return None
-        ready = self.db.posts(key, "approved") + self.db.posts(key, "queued")
+        ready = self.ready_posts(key, c)
         self.db.use_slot(key, day, slot)
         if not ready:
             self.bot(c).notify(self.admin, f"⚠️ {c['title']}: слот {slot} пропущен — нет готовых постов")

@@ -38,7 +38,7 @@ def main(argv=None):
         for k, c in chans.items():
             f.approvals(k, c)  # сначала забираем нажатые кнопки ✅/❌
         for k, c in chans.items():
-            ready = f.db.posts(k, "approved") + f.db.posts(k, "queued")
+            ready = f.ready_posts(k, c)
             if not ready:
                 print(k, "нет готовых постов")
                 continue
