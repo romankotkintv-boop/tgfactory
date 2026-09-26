@@ -30,8 +30,15 @@ channels:
         One bold, surprising visual metaphor of the post's main idea as a single strong focal object,
         glossy 3D render style, dramatic lighting, high contrast, vivid saturated colors
         (electric orange, deep navy, hot accents), dynamic diagonal composition, a sense of tension or emotion,
-        clean uncluttered background so it pops on a phone screen. Purely visual: absolutely no text, no letters, no words, no numbers,
+        clean uncluttered background. Purely visual: absolutely no text, no letters, no words, no numbers,
         no captions or labels anywhere in the image. No logos, no brand names, no real people.
+      photo_share: 0.3                  # советы/уроки: 30% — реалистичное фото; новости и хайп — всегда фото
+      photo_style: >-
+        Photorealistic editorial photograph, shot on a full-frame camera, natural light, shallow depth of field,
+        rich but natural colors, real-life scene that shows the post's situation: small business owners, sellers,
+        shops, warehouses, laptops, packages, customers, offices in Russia/CIS style. Candid, authentic, professional.
+        People may appear but must be ordinary non-famous people, no celebrities. No text, no letters, no numbers,
+        no logos, no brand names on anything.
     mix:                                # доля типов постов
       trending: 0.4                     # хайп: горячие темы дня → вывод для бизнеса
       rss_digest: 0.3
@@ -76,6 +83,7 @@ channels:
     timezone: Asia/Tashkent
     bot_token_env: TG_BOT_UZ
     channel_id_env: TG_CHANNEL_UZ
+    source_link: false                  # без ссылки «Источник»: канал учебный, новость — только повод
     already_published: ["Sayohat haqidagi Cue Card"]   # вышел 26.09 — не повторять
     logo_prompts:                       # маскот «Ustoz Sher» — варианты персонажа
       - "Character design sheet for a Telegram channel mascot, single character, centered, full body, plain soft background, no text, no letters, no logos. Character: 'Ustoz Sher' — a young, friendly, smart lion teacher with a fluffy golden mane, round glasses, wearing a traditional Uzbek doppi skullcap (black with white chili-pepper embroidery pattern), holding a teacher's pointer, confident encouraging smile, appealing to Uzbek teenagers and students. Style: glossy 3D animated-movie render, soft studio lighting, vibrant turquoise and sunny yellow palette, wearing a turquoise hoodie."
@@ -100,9 +108,15 @@ channels:
         Scroll-stopping, eye-catching image for an IELTS English learning post aimed at young people.
         One bold, fun visual metaphor of the post topic as a single strong focal object, glossy 3D render
         or vibrant pop-art style, bright saturated colors (turquoise, magenta, sunny yellow), dramatic lighting,
-        dynamic composition, energetic and modern, clean background so it pops on a phone screen.
+        dynamic composition, energetic and modern, clean background.
         No logos, no real people.
       text: english                     # на картинке — один короткий английский заголовок (ключевое слово поста)
+      photo_share: 0.25                 # уроки: 25% — реалистичное фото без маскота; новости/хайп — всегда фото
+      photo_style: >-
+        Photorealistic editorial photograph, natural light, shallow depth of field, vivid but natural colors,
+        a real-life scene that shows the post's topic: young Uzbek students and people in modern Tashkent —
+        studying, talking, cafes, campuses, city streets, travel, sport, technology. Warm, optimistic, authentic.
+        Ordinary non-famous people only, no celebrities. No logos or brand names.
       mascot_ref: assets/ustoz_sher.jpg # образец маскота — модель рисует этого же персонажа
       mascot: >-
         The attached reference image shows the channel mascot "Ustoz Sher": a friendly young lion teacher with a golden mane,
