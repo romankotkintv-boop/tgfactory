@@ -90,6 +90,8 @@ class Factory:
             n += sources.collect_rss(self.db, key, c)
         if "evergreen" in mix:
             n += sources.collect_evergreen(self.db, key, c)
+        if "trending" in mix:
+            n += sources.collect_trending(self.db, key, c)
         if "shopee_offers" in mix:
             n += sources.collect_shopee(self.db, key, c, self.env.get("SHOPEE_APP_ID"),
                                         self.env.get("SHOPEE_SECRET"))
@@ -102,15 +104,24 @@ class Factory:
         first = random.choices(kinds, weights=[mix[k] for k in kinds])[0]
         kinds.remove(first)
         kinds.insert(0, first)  # сначала тип по весам mix, остальные — запасные
+        max_age = c.get("trending", {}).get("max_age_hours", 36) * 3600
         for kind in kinds:
-            item = self.db.next_unused_item(key, kind)
-            if item:
+            while True:
+                item = self.db.next_unused_item(key, kind)
+                if not item:
+                    break
+                if kind == "trending":   # хайп протухает: старше max_age_hours не берём
+                    ts = json.loads(item["payload"] or "{}").get("published_ts") or 0
+                    if ts and time.time() - ts > max_age:
+                        self.db.mark_item_used(item["id"])
+                        continue
                 return kind, item
         return None, None
 
     def _finalize(self, kind, item, c, text):
         payload = json.loads(item["payload"] or "{}")
-        if kind == "rss_digest" and item["url"] and item["url"] not in text:
+        if kind in ("rss_digest", "trending") and item["url"] and "trends.google" not in item["url"] \
+                and item["url"] not in text:
             text += f'\n\n<a href="{item["url"]}">Источник</a>'
         if kind == "shopee_offers":
             link = payload.get("offerLink") or item["url"]

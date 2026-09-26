@@ -106,6 +106,11 @@ def build_user_prompt(kind: str, item, cfg: dict) -> str:
         return (f"Тип поста: rss_digest.\nЗаголовок источника: {item['title']}\n"
                 f"URL: {item['url']}\nКраткое содержание источника:\n{payload.get('summary','')}\n\n"
                 "Напиши пост строго по фактам источника.")
+    if kind == "trending":
+        return (f"Тип поста: trending (горячая тема дня).\nЧто ищут/обсуждают прямо сейчас: {item['title']}\n"
+                f"Новость по теме: {payload.get('news_title','')}\nURL: {item['url']}\n"
+                f"Подробности: {payload.get('summary','')}\nПопулярность запроса: {payload.get('traffic','')}\n\n"
+                "Сделай пост по правилам для trending. Факты — только из новости выше, ничего не выдумывай.")
     if kind == "evergreen":
         return f"Тип поста: evergreen.\nТема: {item['title']}\nНапиши пост."
     if kind == "shopee_offers":
@@ -130,6 +135,8 @@ def is_rejected_by_rules(text: str, cfg: dict) -> str | None:
     stop = ["как языковая модель", "as an ai", "sun'iy intellekt sifatida", "como uma ia",
             "[черновик без api]"]
     low = text.lower()
+    if low.strip().startswith("skip"):
+        return "модель решила, что тема не подходит каналу"
     for s in stop:
         if s in low and not os.getenv("ALLOW_MOCK_POSTS"):
             return f"стоп-фраза: {s}"
