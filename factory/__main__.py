@@ -14,7 +14,7 @@ def main(argv=None):
     logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"),
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     ap = argparse.ArgumentParser(prog="factory")
-    ap.add_argument("cmd", choices=["run", "collect", "generate", "status", "publish-now", "import-seed", "recover-items"])
+    ap.add_argument("cmd", choices=["run", "collect", "generate", "status", "publish-now", "import-seed", "recover-items", "logos"])
     ap.add_argument("channel", nargs="?")
     a = ap.parse_args(argv)
     f = Factory()
@@ -25,6 +25,21 @@ def main(argv=None):
         print("загружено стартовых постов:", f.import_seed())
     elif a.cmd == "recover-items":  # после сбоев модели: вернуть сырьё без постов в очередь
         print("возвращено в очередь:", f.db.recover_orphan_items(a.channel))
+    elif a.cmd == "logos":  # варианты логотипов каналов → папка logos/ (коммитится в репозиторий)
+        from . import images
+        os.makedirs("logos", exist_ok=True)
+        for k, c in f.cfg.items():
+            if a.channel and k != a.channel:
+                continue
+            for i, prompt in enumerate(c.get("logo_prompts", []), 1):
+                path, err = images.generate_gemini(prompt, f.env.get("GEMINI_API_KEY"), "logos",
+                                                   f.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image", "1:1")
+                if path:
+                    dst = os.path.join("logos", f"{k}_{i}{os.path.splitext(path)[1]}")
+                    os.replace(path, dst)
+                    print(k, "логотип:", dst)
+                else:
+                    print(k, "логотип не создан:", err)
     elif a.cmd == "run":
         f.run()
     elif a.cmd == "collect":
