@@ -233,10 +233,17 @@ class Factory:
                     "No other text, no Uzbek, no Russian, no numbers")
         else:
             rule = "do not put any text, letters or numbers into the image"
-        prompt = (f"{img.get('style', '')}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
-        path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media",
-                                           self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image",
-                                           img.get("aspect", "4:3"))
+        ref = img.get("mascot_ref") if img.get("mascot_ref") and os.path.exists(img["mascot_ref"]) else None
+        mascot = f"\n\n{img['mascot']}" if ref and img.get("mascot") else ""
+        prompt = (f"{img.get('style', '')}{mascot}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
+        model = self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image"
+        path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media", model,
+                                           img.get("aspect", "4:3"), ref_path=ref)
+        if err and ref:   # с образцом не вышло — рисуем без маскота, пост не должен остаться без картинки
+            log.warning("%s: картинка с маскотом не вышла (%s), пробую без него", key, err)
+            prompt = (f"{img.get('style', '')}\n\nThe image illustrates this Telegram post ({rule}):\n{plain}")
+            path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media", model,
+                                               img.get("aspect", "4:3"))
         if path:
             mark = img.get("watermark") or self.env.get(c["channel_id_env"], "")
             path = images.add_watermark(path, mark if str(mark).startswith("@") else "")

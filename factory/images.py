@@ -36,14 +36,21 @@ GEMINI_IMAGE_URL = "https://generativelanguage.googleapis.com/v1beta/models/{mod
 
 
 def generate_gemini(prompt: str, api_key: str, out_dir: str, model: str = "gemini-3.1-flash-lite-image",
-                    aspect: str = "4:3") -> tuple[str | None, str | None]:
-    """Возвращает (путь к картинке, None) или (None, текст ошибки). Ошибка не ломает публикацию."""
+                    aspect: str = "4:3", ref_path: str | None = None) -> tuple[str | None, str | None]:
+    """Возвращает (путь к картинке, None) или (None, текст ошибки). Ошибка не ломает публикацию.
+    ref_path — картинка-образец (маскот): модель рисует того же персонажа."""
     if not api_key or not prompt:
         return None, "нет ключа или промпта"
+    parts_in = []
+    if ref_path and os.path.exists(ref_path):
+        with open(ref_path, "rb") as f:
+            mime = "image/png" if ref_path.lower().endswith(".png") else "image/jpeg"
+            parts_in.append({"inlineData": {"mimeType": mime, "data": base64.b64encode(f.read()).decode()}})
+    parts_in.append({"text": prompt})
     try:
         r = httpx.post(
             GEMINI_IMAGE_URL.format(model=model), params={"key": api_key},
-            json={"contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            json={"contents": [{"role": "user", "parts": parts_in}],
                   "generationConfig": {"responseModalities": ["IMAGE"],
                                        "imageConfig": {"aspectRatio": aspect}}},
             timeout=180,
