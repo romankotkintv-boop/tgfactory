@@ -12,10 +12,6 @@ channels:
     channel_id_env: TG_CHANNEL_RU       # @username или -100...
     already_published: ["Взлом Bitget", "выбрать канал в Telegram для рекламы"]   # вышли 26.09, память потерялась — не повторять
     approval: false                     # публикуем без ручного одобрения
-    logo_prompts:
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: marketing for small business without an agency. Icon: a megaphone whose sound waves form an upward growth arrow. Colors: deep navy background, bright orange icon, white accents."
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: marketing for small business. Icon: a small shop storefront with a rising rocket above it. Colors: bright orange background, deep navy icon, white accents."
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: smart DIY marketing. Icon: a target with an arrow in the bullseye shaped like a lightbulb. Colors: deep navy background, orange and white icon."
     slots: ["09:10", "12:40", "16:20", "19:30"]   # время публикаций (часовой пояс канала)
     quiz:                               # регулярный интерактив: Telegram-викторина
       slots: ["14:30"]
@@ -81,10 +77,10 @@ channels:
     bot_token_env: TG_BOT_UZ
     channel_id_env: TG_CHANNEL_UZ
     already_published: ["Sayohat haqidagi Cue Card"]   # вышел 26.09 — не повторять
-    logo_prompts:
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: daily IELTS English lessons for young people in Uzbekistan. Icon: an open book with a speech bubble rising from it and a small star. Colors: turquoise background, sunny yellow and white icon."
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: learning English every day. Icon: a graduation cap on top of a chat bubble. Colors: sunny yellow background, turquoise icon, magenta accent."
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: English exam preparation. Icon: a pencil and a headphone forming a circle together. Colors: magenta background, white and yellow icon."
+    logo_prompts:                       # маскот «Ustoz Sher» — варианты персонажа
+      - "Character design sheet for a Telegram channel mascot, single character, centered, full body, plain soft background, no text, no letters, no logos. Character: 'Ustoz Sher' — a young, friendly, smart lion teacher with a fluffy golden mane, round glasses, wearing a traditional Uzbek doppi skullcap (black with white chili-pepper embroidery pattern), holding a teacher's pointer, confident encouraging smile, appealing to Uzbek teenagers and students. Style: glossy 3D animated-movie render, soft studio lighting, vibrant turquoise and sunny yellow palette, wearing a turquoise hoodie."
+      - "Character design sheet for a Telegram channel mascot, single character, centered, full body, plain soft background, no text, no letters, no logos. Character: 'Ustoz Sher' — a young, friendly, smart lion teacher with a fluffy golden mane, round glasses, wearing a traditional Uzbek doppi skullcap (black with white chili-pepper embroidery pattern), holding a teacher's pointer, confident encouraging smile, appealing to Uzbek teenagers and students. Style: bold flat vector sticker illustration with thick white outline, bright neon-lime and deep navy palette, wearing a smart navy blazer, giving a thumbs up."
+      - "Character design sheet for a Telegram channel mascot, single character, centered, full body, plain soft background, no text, no letters, no logos. Character: 'Ustoz Sher' — a young, friendly, smart lion teacher with a fluffy golden mane, round glasses, wearing a traditional Uzbek doppi skullcap (black with white chili-pepper embroidery pattern), holding a teacher's pointer, confident encouraging smile, appealing to Uzbek teenagers and students. Style: modern 3D clay/toy figure look, pastel magenta and teal palette, wearing a striped ikat-pattern scarf, holding an open book, one eyebrow raised playfully."
     approval: false                     # по решению владельца: публикуем без ручного одобрения (как RU и BR)
     approval_timeout_min: 240           # без ответа — пост не выходит
     slots: ["08:30", "13:00", "19:00"]
@@ -142,9 +138,6 @@ channels:
     timezone: America/Sao_Paulo
     bot_token_env: TG_BOT_BR
     channel_id_env: TG_CHANNEL_BR
-    logo_prompts:
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: Brazilian home deals and finds. Icon: a cute house with a price tag shaped like a heart. Colors: green background, yellow and white icon."
-      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: home finds and discounts. Icon: a shopping bag with a little house roof and a sparkle. Colors: yellow background, green icon, white accents."
     already_published: ["Gaveta bagunçada nunca mais"]   # вышел 26.09 — не повторять
     approval: false
     slots: ["09:00", "13:00", "19:00"]     # до ключей Shopee — 3 поста в день из стартовых; потом до 7
