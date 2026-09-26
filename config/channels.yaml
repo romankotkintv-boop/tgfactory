@@ -35,8 +35,9 @@ channels:
       photo_share: 0.3                  # советы/уроки: 30% — реалистичное фото; новости и хайп — всегда фото
       photo_style: >-
         Photorealistic editorial photograph, shot on a full-frame camera, natural light, shallow depth of field,
-        rich but natural colors, real-life scene that shows the post's situation: small business owners, sellers,
-        shops, warehouses, laptops, packages, customers, offices in Russia/CIS style. Candid, authentic, professional.
+        rich but natural colors, real-life scene. For advice posts without a news hook: a vivid real situation from
+        small business life (a seller packing a bestseller, a busy shop counter, a courier handing a parcel), never a
+        generic office. Candid, authentic.
         People may appear but must be ordinary non-famous people, no celebrities. No text, no letters, no numbers,
         no logos, no brand names on anything.
     mix:                                # доля типов постов
@@ -114,8 +115,8 @@ channels:
       photo_share: 0.25                 # уроки: 25% — реалистичное фото без маскота; новости/хайп — всегда фото
       photo_style: >-
         Photorealistic editorial photograph, natural light, shallow depth of field, vivid but natural colors,
-        a real-life scene that shows the post's topic: young Uzbek students and people in modern Tashkent —
-        studying, talking, cafes, campuses, city streets, travel, sport, technology. Warm, optimistic, authentic.
+        a real-life scene of the post's topic; if people are needed — young Uzbeks in modern Tashkent.
+        Warm, optimistic, authentic.
         Ordinary non-famous people only, no celebrities. No logos or brand names.
       mascot_ref: assets/ustoz_sher.jpg # образец маскота — модель рисует этого же персонажа
       mascot: >-
