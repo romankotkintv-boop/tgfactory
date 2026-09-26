@@ -241,6 +241,12 @@ class Factory:
         photo = bool(img.get("photo_style")) and (kind in ("trending", "rss_digest")
                                                    or random.random() < float(img.get("photo_share", 0)))
         style = img["photo_style"] if photo else img.get("style", "")
+        if photo:   # фото должно цеплять самим сюжетом новости, а не стоковым «офис + графики»
+            style += ("\nSUBJECT: show the concrete hook of the post — the specific event, sport, place, object or situation "
+                      "from its first paragraph (e.g. a story about baseball → a dramatic baseball moment on the field; "
+                      "a story about a phone launch → the phone in a striking scene). Cinematic, dynamic, emotional, "
+                      "eye-catching like a magazine cover. AVOID boring generic stock scenes: people at laptops, "
+                      "charts and graphs, handshakes, meeting rooms, smiling people around a desk.")
         ref = None if photo else (img.get("mascot_ref") if img.get("mascot_ref") and os.path.exists(img["mascot_ref"]) else None)
         mascot = f"\n\n{img['mascot']}" if ref and img.get("mascot") else ""
         aspect = img.get("aspect", "4:3")
