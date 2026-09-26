@@ -103,6 +103,13 @@ channels:
         dynamic composition, energetic and modern, clean background so it pops on a phone screen.
         No logos, no real people.
       text: english                     # на картинке — один короткий английский заголовок (ключевое слово поста)
+      mascot_ref: assets/ustoz_sher.jpg # образец маскота — модель рисует этого же персонажа
+      mascot: >-
+        The attached reference image shows the channel mascot "Ustoz Sher": a friendly young lion teacher with a golden mane,
+        round glasses, black Uzbek doppi skullcap, turquoise hoodie, jeans. Put exactly this same character (same face, glasses,
+        doppi, hoodie) into the scene as the main hero, in a new pose and emotion that fits the topic
+        (explaining, surprised, celebrating, thinking, pointing at the key idea). Use only the main full-body design, not the small
+        extra poses from the reference sheet. Same 3D animated-movie style.
     mix:
       trending: 0.4                     # хайп: новость дня → английские слова и мини-текст для IELTS
       evergreen: 0.6
