@@ -64,7 +64,7 @@ class LLM:
         """GEMINI_MODEL может быть списком через запятую: при перегрузке берём следующую модель."""
         body = {"systemInstruction": {"parts": [{"text": system}]},
                 "contents": [{"role": "user", "parts": [{"text": user}]}],
-                "generationConfig": {"maxOutputTokens": max_tokens * 2,
+                "generationConfig": {"maxOutputTokens": max(max_tokens * 6, 8192),
                                      "responseMimeType": "application/json"}}
         last = None
         for model in [m.strip() for m in self.model.split(",") if m.strip()]:
