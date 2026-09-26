@@ -16,6 +16,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="factory")
     ap.add_argument("cmd", choices=["run", "collect", "generate", "status", "publish-now", "import-seed", "recover-items", "logos"])
     ap.add_argument("channel", nargs="?")
+    ap.add_argument("--count", type=int, default=1, help="publish-now: сколько постов на канал")
     a = ap.parse_args(argv)
     f = Factory()
     chans = f.channels()
@@ -52,21 +53,31 @@ def main(argv=None):
         f.reconcile()
         for k, c in chans.items():
             f.approvals(k, c)  # сначала забираем нажатые кнопки ✅/❌
+        import time
         for k, c in chans.items():
-            ready = f.ready_posts(k, c)
-            if not ready:
-                print(k, "нет готовых постов")
+            if not c.get("enabled", True):
                 continue
-            p = ready[0]
-            try:
-                image_path, image_url = f.ensure_image(k, c, p)
-                msg = f.bot(c).send_post(f.chat(c), p["text"], image_path, image_url)
-                f.db.set_post(p["id"], status="published", tg_message_id=msg.get("message_id"))
-                print(k, "опубликован пост", p["id"])
-            except Exception as e:  # noqa: BLE001  — не повторяем: пост мог дойти, дубль хуже пропуска
-                f.db.set_post(p["id"], status="failed", error=str(e)[:500])
-                f.bot(c).notify(f.admin, f"❌ {c['title']}: ошибка публикации поста {p['id']}: {e}")
-                print(k, "ошибка публикации", p["id"], e)
+            for n in range(max(1, min(a.count, 15))):
+                ready = f.ready_posts(k, c)
+                if not ready:
+                    f.generate(k, c)  # очередь кончилась — дописываем
+                    ready = f.ready_posts(k, c)
+                if not ready:
+                    print(k, "нет готовых постов")
+                    break
+                p = ready[0]
+                try:
+                    image_path, image_url = f.ensure_image(k, c, p)
+                    msg = f.bot(c).send_post(f.chat(c), p["text"], image_path, image_url)
+                    f.db.set_post(p["id"], status="published", tg_message_id=msg.get("message_id"))
+                    print(k, "опубликован пост", p["id"])
+                except Exception as e:  # noqa: BLE001  — не повторяем: пост мог дойти, дубль хуже пропуска
+                    f.db.set_post(p["id"], status="failed", error=str(e)[:500])
+                    f.bot(c).notify(f.admin, f"❌ {c['title']}: ошибка публикации поста {p['id']}: {e}")
+                    print(k, "ошибка публикации", p["id"], e)
+                    break
+                if n + 1 < a.count:
+                    time.sleep(int(os.getenv("BURST_PAUSE_SEC", "20")))
     elif a.cmd == "status":
         for k, counts in f.status():
             print(k, counts)
