@@ -4,7 +4,7 @@ name: tgfactory
 
 on:
   schedule:
-    - cron: "*/30 * * * *"          # GitHub может запускать с задержкой — слоты имеют окно 90 минут
+    - cron: "13,43 * * * *"          # не на :00/:30 — GitHub в пиковые минуты теряет запуски; окно слота 150 мин
   workflow_dispatch:
     inputs:
       publish_now:
