@@ -296,6 +296,8 @@ class Factory:
                 if not last or datetime.now(timezone.utc) - datetime.fromisoformat(last) > timedelta(minutes=collect_every_min):
                     self.collect(key, c)
                     self.db.put(f"{key}:last_collect", datetime.now(timezone.utc).isoformat())
+                elif "trending" in c.get("mix", {}):   # хайп проверяем каждый запуск — он быстро меняется
+                    sources.collect_trending(self.db, key, c)
                 self.approvals(key, c)
                 self.generate(key, c)
                 self.publish(key, c)
