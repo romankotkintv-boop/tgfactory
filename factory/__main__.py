@@ -43,10 +43,15 @@ def main(argv=None):
                 print(k, "нет готовых постов")
                 continue
             p = ready[0]
-            image_path, image_url = f.ensure_image(k, c, p)
-            msg = f.bot(c).send_post(f.chat(c), p["text"], image_path, image_url)
-            f.db.set_post(p["id"], status="published", tg_message_id=msg.get("message_id"))
-            print(k, "опубликован пост", p["id"])
+            try:
+                image_path, image_url = f.ensure_image(k, c, p)
+                msg = f.bot(c).send_post(f.chat(c), p["text"], image_path, image_url)
+                f.db.set_post(p["id"], status="published", tg_message_id=msg.get("message_id"))
+                print(k, "опубликован пост", p["id"])
+            except Exception as e:  # noqa: BLE001  — не повторяем: пост мог дойти, дубль хуже пропуска
+                f.db.set_post(p["id"], status="failed", error=str(e)[:500])
+                f.bot(c).notify(f.admin, f"❌ {c['title']}: ошибка публикации поста {p['id']}: {e}")
+                print(k, "ошибка публикации", p["id"], e)
     elif a.cmd == "status":
         for k, counts in f.status():
             print(k, counts)

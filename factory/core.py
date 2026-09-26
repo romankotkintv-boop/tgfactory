@@ -189,7 +189,7 @@ class Factory:
             return None, None   # в тестовом режиме не тратим деньги на картинки
         plain = re.sub(r"<[^>]+>", "", p["text"])[:700]
         prompt = (f"{img.get('style', '')}\n\nThe image illustrates this Telegram post "
-                  f"(do not copy the post text into the image):\n{plain}")
+                  f"(do not put any text, letters or numbers into the image):\n{plain}")
         path, err = images.generate_gemini(prompt, self.env.get("GEMINI_API_KEY"), "media",
                                            self.env.get("GEMINI_IMAGE_MODEL") or "gemini-3.1-flash-lite-image",
                                            img.get("aspect", "4:3"))

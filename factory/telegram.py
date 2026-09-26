@@ -25,7 +25,7 @@ class Bot:
     def _call(self, method, data=None, files=None, tries=4):
         url = f"https://api.telegram.org/bot{self.token}/{method}"
         for _ in range(tries):
-            r = httpx.post(url, data=data, files=files, timeout=60)
+            r = httpx.post(url, data=data, files=files, timeout=180 if files else 60)
             j = r.json()
             if j.get("ok"):
                 return j["result"]
