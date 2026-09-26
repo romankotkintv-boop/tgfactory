@@ -19,13 +19,26 @@ channels:
       provider: gemini
       aspect: "4:3"
       style: >-
-        Clean modern flat editorial illustration or simple infographic for a Russian Telegram channel
-        about marketing for small business. Deep navy blue and warm orange palette, white background,
-        minimal and professional. Purely visual: absolutely no text, no letters, no words, no numbers,
+        Scroll-stopping, eye-catching image for a Telegram post about marketing and small business.
+        One bold, surprising visual metaphor of the post's main idea as a single strong focal object,
+        glossy 3D render style, dramatic lighting, high contrast, vivid saturated colors
+        (electric orange, deep navy, hot accents), dynamic diagonal composition, a sense of tension or emotion,
+        clean uncluttered background so it pops on a phone screen. Purely visual: absolutely no text, no letters, no words, no numbers,
         no captions or labels anywhere in the image. No logos, no brand names, no real people.
     mix:                                # доля типов постов
-      rss_digest: 0.5
-      evergreen: 0.5
+      trending: 0.4                     # хайп: горячие темы дня → вывод для бизнеса
+      rss_digest: 0.3
+      evergreen: 0.3
+    trending:
+      max_age_hours: 36                 # старше — не берём, хайп протух
+      feeds:
+        - https://trends.google.com/trending/rss?geo=RU
+        - https://trends.google.com/trending/rss?geo=US
+      stop_words: [полит, выбор, госдум, кремл, путин, зеленск, украин, всу, " сво ", фронт, войн, воен,
+        обстрел, дрон, беспилот, ракет, теракт, погиб, гибел, убит, убий, жертв, катастроф, крушен, авари,
+        арест, задержан, суд над, приговор, митинг, протест, оппозиц, мобилизац, санкци, религ, церк, мечет,
+        наркот, самоубий, сальмонел, отравлен, ставки на, прогноз на матч, букмекер, казино,
+        politic, election, war , military, killed, dead, shooting, attack, terror, trump, putin, ukraine, israel, gaza]
     rss:
       - https://www.sostav.ru/rss
       - https://www.cossa.ru/rss/
@@ -59,11 +72,24 @@ channels:
       provider: gemini
       aspect: "4:3"
       style: >-
-        Minimal educational flashcard-style image for an IELTS English learning channel.
-        Calm teal and white palette, friendly and clean. Purely visual metaphor for the topic:
+        Scroll-stopping, eye-catching image for an IELTS English learning post aimed at young people.
+        One bold, fun visual metaphor of the post topic as a single strong focal object, glossy 3D render
+        or vibrant pop-art style, bright saturated colors (turquoise, magenta, sunny yellow), dramatic lighting,
+        dynamic composition, energetic and modern, clean background so it pops on a phone screen.
+        Purely visual:
         absolutely no text, no letters, no words, no numbers anywhere in the image. No logos, no real people.
     mix:
-      evergreen: 1.0
+      trending: 0.4                     # хайп: новость дня → английские слова и мини-текст для IELTS
+      evergreen: 0.6
+    trending:
+      max_age_hours: 36
+      feeds:
+        - https://trends.google.com/trending/rss?geo=UZ
+        - https://kun.uz/news/rss
+      stop_words: [siyosat, saylov, prezident, putin, ukrain, rossiya, urush, harbiy, hujum, terakt, halok,
+        o'ldi, oʻldi, qotil, jinoyat, qamoq, sud, hibs, din , masjid, namoz, narkot, o'z joniga, oʻz joniga,
+        полит, выбор, путин, украин, войн, погиб, убий, арест, суд, религ, ставки на, прогноз на матч, букмекер,
+        politic, election, war , killed, attack, terror]
     evergreen_topics:
       - "Kun so'zi: 5 ta IELTS akademik so'z, misollar bilan"
       - "Speaking Part 1: savol va namunaviy javob (Band 7)"
@@ -93,8 +119,8 @@ channels:
       fallback: gemini                  # если фото нет (стартовые советы) — рисуем
       aspect: "4:3"
       style: >-
-        Bright, cozy lifestyle photo of a tidy Brazilian home interior related to the post topic,
-        natural daylight, realistic. No text, no brand logos, no people's faces.
+        Eye-catching, bright lifestyle photo of a tidy Brazilian home related to the post topic,
+        strong focal object, vivid colors, warm sunlight, high contrast, realistic. No text, no brand logos, no people's faces.
     disclosure: "#publi"                # метка рекламы по гиду CONAR — в каждом посте с партнёрской ссылкой
     mix:
       shopee_offers: 1.0
