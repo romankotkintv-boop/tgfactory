@@ -77,7 +77,7 @@ channels:
       - "Speaking Part 2: cue card namunasi"
 
   br_deals:
-    enabled: true
+    enabled: false                      # пауза до подключения партнёрки Shopee (решение владельца 26.09)
     title: "Achados da Casa"
     language: pt
     timezone: America/Sao_Paulo
