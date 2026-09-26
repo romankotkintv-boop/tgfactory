@@ -70,8 +70,10 @@ jobs:
             python -m factory publish-now "${{ github.event.inputs.publish_now }}"
           fi
       - name: Статус
+        if: always()
         run: python -m factory status
       - name: Сохранить состояние
+        if: always()                    # память сохраняем даже после ошибки — иначе будут дубли постов
         run: |
           git config user.name "tgfactory-bot"
           git config user.email "tgfactory-bot@users.noreply.github.com"
