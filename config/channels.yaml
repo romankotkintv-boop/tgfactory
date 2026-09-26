@@ -12,6 +12,10 @@ channels:
     channel_id_env: TG_CHANNEL_RU       # @username или -100...
     already_published: ["Взлом Bitget", "выбрать канал в Telegram для рекламы"]   # вышли 26.09, память потерялась — не повторять
     approval: false                     # публикуем без ручного одобрения
+    logo_prompts:
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: marketing for small business without an agency. Icon: a megaphone whose sound waves form an upward growth arrow. Colors: deep navy background, bright orange icon, white accents."
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: marketing for small business. Icon: a small shop storefront with a rising rocket above it. Colors: bright orange background, deep navy icon, white accents."
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: smart DIY marketing. Icon: a target with an arrow in the bullseye shaped like a lightbulb. Colors: deep navy background, orange and white icon."
     slots: ["09:10", "12:40", "16:20", "19:30"]   # время публикаций (часовой пояс канала)
     queue_target: 6                     # сколько готовых постов держать в очереди
     prompt: prompts/ru_marketing.md
@@ -34,6 +38,8 @@ channels:
       feeds:
         - https://trends.google.com/trending/rss?geo=RU
         - https://trends.google.com/trending/rss?geo=US
+        - https://habr.com/ru/rss/hubs/artificial_intelligence/articles/?fl=ru   # ИИ — горячая тема
+        - https://techcrunch.com/category/artificial-intelligence/feed/
       stop_words: [полит, выбор, госдум, кремл, путин, зеленск, украин, всу, " сво ", фронт, войн, воен,
         обстрел, дрон, беспилот, ракет, теракт, погиб, гибел, убит, убий, жертв, катастроф, крушен, авари,
         арест, задержан, суд над, приговор, митинг, протест, оппозиц, мобилизац, санкци, религ, церк, мечет,
@@ -54,6 +60,11 @@ channels:
       - как работать с отзывами
       - контент-план на неделю для малого бизнеса
       - как выбрать канал для посева в Telegram
+      - нейросеть вместо копирайтера — где экономит, где вредит
+      - 5 задач малого бизнеса, которые ИИ-ассистент решает за 10 минут
+      - ИИ для карточек товаров на маркетплейсах — фото, тексты, ответы на отзывы
+      - как ИИ-агенты меняют продажи и поддержку в малом бизнесе
+      - промпт-шаблоны для маркетинга — как ставить задачу нейросети
 
   uz_ielts:
     enabled: true
@@ -63,6 +74,10 @@ channels:
     bot_token_env: TG_BOT_UZ
     channel_id_env: TG_CHANNEL_UZ
     already_published: ["Sayohat haqidagi Cue Card"]   # вышел 26.09 — не повторять
+    logo_prompts:
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: daily IELTS English lessons for young people in Uzbekistan. Icon: an open book with a speech bubble rising from it and a small star. Colors: turquoise background, sunny yellow and white icon."
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: learning English every day. Icon: a graduation cap on top of a chat bubble. Colors: sunny yellow background, turquoise icon, magenta accent."
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: English exam preparation. Icon: a pencil and a headphone forming a circle together. Colors: magenta background, white and yellow icon."
     approval: false                     # по решению владельца: публикуем без ручного одобрения (как RU и BR)
     approval_timeout_min: 240           # без ответа — пост не выходит
     slots: ["08:30", "13:00", "19:00"]
@@ -86,6 +101,7 @@ channels:
       feeds:
         - https://trends.google.com/trending/rss?geo=UZ
         - https://kun.uz/news/rss
+        - https://techcrunch.com/category/artificial-intelligence/feed/   # ИИ-новости на английском — готовый материал для урока
       stop_words: [siyosat, saylov, prezident, putin, ukrain, rossiya, urush, harbiy, hujum, terakt, halok,
         o'ldi, oʻldi, qotil, jinoyat, qamoq, sud, hibs, din , masjid, namoz, narkot, o'z joniga, oʻz joniga,
         полит, выбор, путин, украин, войн, погиб, убий, арест, суд, религ, ставки на, прогноз на матч, букмекер,
@@ -101,6 +117,9 @@ channels:
       - "Mini test: 5 ta savol, javoblar pastda"
       - "Writing Task 1: grafikni tasvirlash iboralari"
       - "Speaking Part 2: cue card namunasi"
+      - "Sun'iy intellekt (AI) mavzusidagi 6 ta IELTS so'z: automation, algorithm, breakthrough..."
+      - "Speaking: 'Will AI replace teachers?' — Band 7 javob namunasi"
+      - "Writing Task 2: AI va ish o'rinlari — kirish va argumentlar"
 
   br_deals:
     enabled: false                      # пауза до подключения партнёрки Shopee (решение владельца 26.09)
@@ -109,6 +128,9 @@ channels:
     timezone: America/Sao_Paulo
     bot_token_env: TG_BOT_BR
     channel_id_env: TG_CHANNEL_BR
+    logo_prompts:
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: Brazilian home deals and finds. Icon: a cute house with a price tag shaped like a heart. Colors: green background, yellow and white icon."
+      - "Telegram channel avatar logo, round-crop safe: the icon is centered with generous padding, flat vector style, bold simple silhouette readable at 64 pixels, solid background, no gradients clutter. Absolutely no text, no letters, no numbers. Topic: home finds and discounts. Icon: a shopping bag with a little house roof and a sparkle. Colors: yellow background, green icon, white accents."
     already_published: ["Gaveta bagunçada nunca mais"]   # вышел 26.09 — не повторять
     approval: false
     slots: ["09:00", "13:00", "19:00"]     # до ключей Shopee — 3 поста в день из стартовых; потом до 7
