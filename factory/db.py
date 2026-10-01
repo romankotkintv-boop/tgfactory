@@ -73,6 +73,18 @@ class DB:
             (channel, kind),
         ).fetchone()
 
+    def unused_items(self, channel, kind, limit=40):
+        return self.conn.execute(
+            "SELECT * FROM items WHERE channel=? AND kind=? AND used=0 ORDER BY id DESC LIMIT ?",
+            (channel, kind, limit),
+        ).fetchall()
+
+    def recent_post_texts(self, channel, limit=6):
+        """Последние посты канала (вышедшие и в очереди) — для баланса тем."""
+        return [r[0] for r in self.conn.execute(
+            "SELECT text FROM posts WHERE channel=? AND status IN ('published','queued','approved','pending_approval') "
+            "ORDER BY id DESC LIMIT ?", (channel, limit)).fetchall()]
+
     def mark_item_used(self, item_id):
         self.conn.execute("UPDATE items SET used=1 WHERE id=?", (item_id,))
         self.conn.commit()

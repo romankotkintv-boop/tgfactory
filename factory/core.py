@@ -108,18 +108,37 @@ class Factory:
         if only:
             kinds = [only] if only in mix else []
         max_age = c.get("trending", {}).get("max_age_hours", 36) * 3600
+        blocked = self._saturated_topics(key, c)
         for kind in kinds:
-            while True:
-                item = self.db.next_unused_item(key, kind)
-                if not item:
-                    break
+            for item in self.db.unused_items(key, kind):
                 if kind == "trending":   # хайп протухает: старше max_age_hours не берём
                     ts = json.loads(item["payload"] or "{}").get("published_ts") or 0
                     if ts and time.time() - ts > max_age:
                         self.db.mark_item_used(item["id"])
                         continue
+                if blocked and self._topics_of(f"{item['title']} {item['uid']}", c) & blocked:
+                    continue   # этой темы и так много в последних постах — берём другую
                 return kind, item
         return None, None
+
+    # ---------- Баланс тем: не больше max постов одной темы среди последних window ----------
+    @staticmethod
+    def _topics_of(text, c):
+        t = (text or "").lower()
+        return {name for name, cap in c.get("topic_caps", {}).items()
+                if any(k in t for k in cap.get("keywords", []))}
+
+    def _saturated_topics(self, key, c):
+        caps = c.get("topic_caps", {})
+        if not caps:
+            return set()
+        recent = self.db.recent_post_texts(key, max(cap.get("window", 6) for cap in caps.values()))
+        out = set()
+        for name, cap in caps.items():
+            head = [r[:300].lower() for r in recent[:cap.get("window", 6)]]
+            if sum(1 for h in head if any(k in h for k in cap.get("keywords", []))) >= cap.get("max", 2):
+                out.add(name)
+        return out
 
     def _finalize(self, kind, item, c, text):
         payload = json.loads(item["payload"] or "{}")
