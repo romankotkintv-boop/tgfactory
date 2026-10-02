@@ -110,6 +110,9 @@ def collect_evergreen(db, channel_key, cfg):
         db.put(f"{channel_key}:evergreen_cycle", cycle)
     new = 0
     for t in topics:
+        if isinstance(t, dict):   # YAML превращает «тема: подробности» в словарь — склеиваем обратно
+            t = "; ".join(f"{k}: {v}" for k, v in t.items())
+        t = str(t)
         uid = f"c{cycle}:" + hashlib.sha1(t.encode()).hexdigest()[:12]
         new += db.add_item(channel_key, "evergreen", uid, t, "", json.dumps({"cycle": cycle}))
     return new
