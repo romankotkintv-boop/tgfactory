@@ -218,7 +218,27 @@ class Factory:
         hot = self.hot_posts(key, c)
         ids = {p["id"] for p in hot}
         rest = [p for p in self.db.posts(key, "approved") + self.db.posts(key, "queued") if p["id"] not in ids]
-        return hot + rest
+        return self._drop_duplicates(key, hot + rest)
+
+    # ---------- Защита от дублей: похожий заголовок уже выходил или стоит раньше в очереди ----------
+    @staticmethod
+    def _title_key(text):
+        first = re.sub(r"<[^>]+>", "", text or "").strip().split("\n")[0]
+        return re.sub(r"[^\w]+", " ", first.lower()).strip()
+
+    def _drop_duplicates(self, key, posts):
+        import difflib
+        seen = [self._title_key(p["text"]) for p in self.db.posts(key, "published")[-40:]]
+        out = []
+        for p in posts:
+            t = self._title_key(p["text"])
+            if t and any(t == s or difflib.SequenceMatcher(None, t, s).ratio() >= 0.8 for s in seen if s):
+                self.db.set_post(p["id"], status="rejected", error="дубль: похожий пост уже выходил")
+                log.info("%s: пост %s снят как дубль", key, p["id"])
+                continue
+            seen.append(t)
+            out.append(p)
+        return out
 
     # ---------- 3. Одобрение ----------
     def approvals(self, key, c):
