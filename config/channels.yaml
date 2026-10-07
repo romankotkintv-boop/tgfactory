@@ -111,6 +111,16 @@ channels:
     bot_token_env: TG_BOT_UZ
     channel_id_env: TG_CHANNEL_UZ
     source_link: false                  # без ссылки «Источник»: канал учебный, новость — только повод
+    topic_caps:                         # баланс тем: среди последних 4 постов — не больше 1 про спорт и 1 про ИИ
+      sport:
+        window: 4
+        max: 1
+        keywords: [futbol, football, " gol", goal, chempion, champion, " liga", league, match, o'yin, sport,
+          ronaldu, ronaldo, messi, olimpiad, olympic, terma jamoa]
+      ai:
+        window: 4
+        max: 1
+        keywords: [sun'iy intellekt, " ai ", "ai-", "ai,", openai, chatgpt, gpt, gemini, robot, artificial intelligence]
     already_published: ["Sayohat haqidagi Cue Card"]   # вышел 26.09 — не повторять
     logo_prompts:                       # маскот «Ustoz Sher» — варианты персонажа
       - "Character design sheet for a Telegram channel mascot, single character, centered, full body, plain soft background, no text, no letters, no logos. Character: 'Ustoz Sher' — a young, friendly, smart lion teacher with a fluffy golden mane, round glasses, wearing a traditional Uzbek doppi skullcap (black with white chili-pepper embroidery pattern), holding a teacher's pointer, confident encouraging smile, appealing to Uzbek teenagers and students. Style: glossy 3D animated-movie render, soft studio lighting, vibrant turquoise and sunny yellow palette, wearing a turquoise hoodie."
